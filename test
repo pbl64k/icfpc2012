@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./install && ./lifter contest1.map
+./install && ./lifter contest9.map
 

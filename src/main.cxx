@@ -42,17 +42,18 @@ class bd_map
 	int r_x_, r_y_;
 	int l_x_, l_y_;
 	int ls_;
+	bool last_n_;
 	vector<vector<char> > x_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
-			ls_(0),
+			ls_(0), last_n_(true),
 			x_(vector<vector<char> >(1))
 	{
 		x_.push_back(vector<char>(0));
 	}
 
-	void add(char c)
+	bool add(char c)
 	{
 		switch (c)
 		{
@@ -77,14 +78,20 @@ class bd_map
 				x_[m_].push_back(c);
 				n_ = max(n_, i_);
 				++i_;
-				break;
+				last_n_ = false;
+				return false;
 			case '\n':
+				if (last_n_)
+				{
+					return true;
+				}
 				x_.push_back(vector<char>());
 				++m_;
 				i_ = 0;
-				break;
+				last_n_ = true;
+				return false;
 			default:
-				return;
+				return false;
 		}
 	}
 
@@ -466,7 +473,10 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		g.m_.add(c);
+		if (g.m_.add(c))
+		{
+			break;
+		}
 	}
 
 	g.m_.fin_init();
