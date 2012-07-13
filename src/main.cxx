@@ -108,7 +108,7 @@ class bd_map
 
 	char &operator()(int x, int y)
 	{
-		if (x < 0 || x > n_ || y < 0 || y > m_)
+		if (! valid(x, y))
 		{
 			throw out_of_range("D'oh.");
 		}
@@ -116,45 +116,172 @@ class bd_map
 		return x_[m_ - y][x];
 	}
 
-	void move(char c)
+	bool move(char c)
 	{
 		switch (c)
 		{
 			case 'L':
-				l();
-				break;
+				return l();
 			case 'R':
-				r();
-				break;
+				return r();
 			case 'U':
-				u();
-				break;
+				return u();
 			case 'D':
-				d();
-				break;
+				return d();
 			case 'W':
-				break;
+				return w();
 			case 'A':
-				break;
+				return w();
 			default:
 				throw invalid_argument("Huh?");
 		}
 	}
 
-	void l()
+	bool l()
 	{
+		int nx = r_x_ - 1, ny = r_y_;
+
+		if (! valid(nx, ny))
+		{
+			return w();
+		}
+
+		bool r = false, ok = false;
+
+		switch ((*this)(nx, ny))
+		{
+			case '\\':
+				r = true;
+			case ' ':
+			case '.':
+			case 'L':
+			case 'O':
+				ok = true;
+		}
+
+		if (ok)
+		{
+			(*this)(r_x_, r_y_) = ' ';
+			r_x_ = nx; r_y_ = ny;
+			(*this)(r_x_, r_y_) = 'R';
+			return r;
+		}
+
+		return w();
 	}
 
-	void r()
+	bool r()
 	{
+		int nx = r_x_ + 1, ny = r_y_;
+
+		if (! valid(nx, ny))
+		{
+			return w();
+		}
+
+		bool r = false, ok = false;
+
+		switch ((*this)(nx, ny))
+		{
+			case '\\':
+				r = true;
+			case ' ':
+			case '.':
+			case 'L':
+			case 'O':
+				ok = true;
+		}
+
+		if (ok)
+		{
+			(*this)(r_x_, r_y_) = ' ';
+			r_x_ = nx; r_y_ = ny;
+			(*this)(r_x_, r_y_) = 'R';
+			return r;
+		}
+
+		return w();
 	}
 
-	void u()
+	bool u()
 	{
+		int nx = r_x_, ny = r_y_ + 1;
+
+		if (! valid(nx, ny))
+		{
+			return w();
+		}
+
+		bool r = false, ok = false;
+
+		switch ((*this)(nx, ny))
+		{
+			case '\\':
+				r = true;
+			case ' ':
+			case '.':
+			case 'L':
+			case 'O':
+				ok = true;
+		}
+
+		if (ok)
+		{
+			(*this)(r_x_, r_y_) = ' ';
+			r_x_ = nx; r_y_ = ny;
+			(*this)(r_x_, r_y_) = 'R';
+			return r;
+		}
+
+		return w();
 	}
 
-	void d()
+	bool d()
 	{
+		int nx = r_x_, ny = r_y_ - 1;
+
+		if (! valid(nx, ny))
+		{
+			return w();
+		}
+
+		bool r = false, ok = false;
+
+		switch ((*this)(nx, ny))
+		{
+			case '\\':
+				r = true;
+			case ' ':
+			case '.':
+			case 'L':
+			case 'O':
+				ok = true;
+		}
+
+		if (ok)
+		{
+			(*this)(r_x_, r_y_) = ' ';
+			r_x_ = nx; r_y_ = ny;
+			(*this)(r_x_, r_y_) = 'R';
+			return r;
+		}
+
+		return w();
+	}
+
+	bool w()
+	{
+		return false;
+	}
+
+	bool valid(int x, int y)
+	{
+		if (x < 0 || x > n_ || y < 0 || y > m_)
+		{
+			return false;
+		}
+
+		return true;
 	}
 };
 
@@ -162,24 +289,45 @@ class bd_game
 {
 	public:
 	bool finished_;
+	bool escaped_;
+	bool died_;
 	bool aborted_;
+	int ls_;
 	int sc_;
 	bd_map m_;
 
-	bd_game(): finished_(false), aborted_(true),
-			sc_(0), m_(bd_map())
+	bd_game(): finished_(false), escaped_(false), died_(false), aborted_(false),
+			ls_(0), sc_(0), m_(bd_map())
 	{
 	}
 
 	void disp()
 	{
-		cout << "Score: " << sc_ << endl;
+		cout << "Score: " << sc_ << " Lambdas: " << ls_ << endl;
 		m_.disp();
+
+		if (escaped_)
+		{
+			cout << "ESCAPED!" << endl;
+		}
+		else if (died_)
+		{
+			cout << "DIED." << endl;
+		}
+		else if (aborted_)
+		{
+			cout << "ABORTED." << endl;
+		}
 	}
 
 	void move(char c)
 	{
-		m_.move(c);
+		--sc_;
+		if (m_.move(c))
+		{
+			++ls_;
+			sc_ += 25;
+		}
 		update();
 		end(c);
 	}
@@ -190,10 +338,22 @@ class bd_game
 
 	void end(char c)
 	{
+		if (m_.r_x_ == m_.l_x_ && m_.r_y_ == m_.l_y_)
+		{
+			escaped_ = true;
+			finished_ = true;
+
+			return;
+		}
+
+		// TODO: died
+
 		if (c == 'A')
 		{
 			aborted_ = true;
 			finished_ = true;
+
+			return;
 		}
 	}
 };
