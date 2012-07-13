@@ -1,0 +1,4 @@
+#!/bin/sh
+
+git archive --format=tar HEAD | gzip >icfp-95119924.tgz
+
