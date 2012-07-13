@@ -5,6 +5,8 @@
 #include <ostream>
 
 #include <cstdlib>
+#include <cctype>
+#include <csignal>
 
 #include <algorithm>
 #include <deque>
@@ -15,9 +17,6 @@
 #include <string>
 #include <vector>
 #include <utility>
-
-#include <ctype.h>
-#include <signal.h>
 
 #include "PressAnyKey.h"
 
@@ -414,6 +413,8 @@ class bd_game
 			escaped_ = true;
 			finished_ = true;
 
+			sc_ += ls_ * 50;
+
 			return;
 		}
 
@@ -421,6 +422,8 @@ class bd_game
 		{
 			aborted_ = true;
 			finished_ = true;
+
+			sc_ += ls_ * 25;
 
 			return;
 		}
