@@ -1,0 +1,4 @@
+#!/bin/sh
+
+./lifter <contest1.map
+
