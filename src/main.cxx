@@ -16,7 +16,10 @@
 #include <vector>
 #include <utility>
 
+#include <ctype.h>
 #include <signal.h>
+
+#include "PressAnyKey.h"
 
 using namespace std;
 
@@ -39,10 +42,12 @@ class bd_map
 	int n_, m_, i_;
 	int r_x_, r_y_;
 	int l_x_, l_y_;
+	int ls_;
 	vector<vector<char> > x_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
+			ls_(0),
 			x_(vector<vector<char> >(1))
 	{
 		x_.push_back(vector<char>(0));
@@ -52,11 +57,12 @@ class bd_map
 	{
 		switch (c)
 		{
+			case '\\':
+				++ls_;
 			case '#':
 			case ' ':
 			case '.':
 			case '*':
-			case '\\':
 			case 'R':
 			case 'L':
 				if (c == 'R')
@@ -154,9 +160,15 @@ class bd_map
 				r = true;
 			case ' ':
 			case '.':
-			case 'L':
 			case 'O':
 				ok = true;
+				break;
+			case '*':
+				if (valid(nx - 1, ny) && (*this)(nx - 1, ny) == ' ')
+				{
+					(*this)(nx - 1, ny) = '*';
+					ok = true;
+				}
 		}
 
 		if (ok)
@@ -187,9 +199,15 @@ class bd_map
 				r = true;
 			case ' ':
 			case '.':
-			case 'L':
 			case 'O':
 				ok = true;
+				break;
+			case '*':
+				if (valid(nx + 1, ny) && (*this)(nx + 1, ny) == ' ')
+				{
+					(*this)(nx + 1, ny) = '*';
+					ok = true;
+				}
 		}
 
 		if (ok)
@@ -220,7 +238,6 @@ class bd_map
 				r = true;
 			case ' ':
 			case '.':
-			case 'L':
 			case 'O':
 				ok = true;
 		}
@@ -253,7 +270,6 @@ class bd_map
 				r = true;
 			case ' ':
 			case '.':
-			case 'L':
 			case 'O':
 				ok = true;
 		}
@@ -334,6 +350,61 @@ class bd_game
 
 	void update()
 	{
+		bd_map nm = m_;
+
+		for (int i = 0; i <= m_.m_; ++i)
+		{
+			for (int j = 0; j <= m_.n_; ++j)
+			{
+				if (m_.valid(j, i - 1) && m_(j, i) == '*' && m_(j, i - 1) == ' ')
+				{
+					nm(j, i) = ' ';
+					nm(j, i - 1) = '*';
+					if (j == m_.r_x_ && i - 1 == m_.r_y_ + 1)
+					{
+						died_ = true;
+					}
+				}
+				else if (m_.valid(j, i - 1) && m_.valid(j + 1, i) && /* m_.valid(j + 1, i - 1) && */
+						m_(j, i) == '*' && m_(j, i - 1) == '*' && m_(j + 1, i) == ' ' && m_(j + 1, i - 1) == ' ')
+				{
+					nm(j, i) = ' ';
+					nm(j + 1, i - 1) = '*';
+					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
+					{
+						died_ = true;
+					}
+				}
+				else if (m_.valid(j, i - 1) && m_.valid(j + 1, i) && m_.valid(j - 1, i) && /* some obviously true checks skipped */
+						m_(j, i) == '*' && m_(j, i - 1) == '*' &&
+						(m_(j + 1, i) != ' ' || m_(j + 1, i - 1) != ' ') && m_(j - 1, i) == ' ' && m_(j - 1, i - 1) == ' ')
+				{
+					nm(j, i) = ' ';
+					nm(j - 1, i - 1) = '*';
+					if (j - 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
+					{
+						died_ = true;
+					}
+				}
+				else if (m_.valid(j, i - 1) && m_.valid(j + 1, i) && /* m_.valid(j + 1, i - 1) && */
+						m_(j, i) == '*' && m_(j, i - 1) == '\\' && m_(j + 1, i) == ' ' && m_(j + 1, i - 1) == ' ')
+				{
+					nm(j, i) = ' ';
+					nm(j + 1, i - 1) = '*';
+					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
+					{
+						died_ = true;
+					}
+				}
+			}
+		}
+
+		if (ls_ == m_.ls_)
+		{
+			nm(m_.l_x_, m_.l_y_) = 'O';
+		}
+
+		m_ = nm;
 	}
 
 	void end(char c)
@@ -346,14 +417,17 @@ class bd_game
 			return;
 		}
 
-		// TODO: died
-
 		if (c == 'A')
 		{
 			aborted_ = true;
 			finished_ = true;
 
 			return;
+		}
+
+		if (died_)
+		{
+			finished_ = true;
 		}
 	}
 };
@@ -402,7 +476,23 @@ int main(int argc, char **argv)
 		{
 			g.disp();
 	
-			cin >> c;
+			c = toupper(PressAnyKey(""));
+
+			switch (c)
+			{
+				case 'H':
+					c = 'L';
+					break;
+				case 'J':
+					c = 'D';
+					break;
+				case 'K':
+					c = 'U';
+					break;
+				case 'L':
+					c = 'R';
+					break;
+			}
 	
 			g.move(c);
 		}
