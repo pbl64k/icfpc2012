@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <fstream>
 #include <istream>
 #include <ostream>
 
@@ -10,6 +11,7 @@
 #include <list>
 #include <map>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <utility>
@@ -18,7 +20,7 @@
 
 using namespace std;
 
-#define INTERACTIVE
+bool interactive;
 
 string sol;
 
@@ -91,9 +93,9 @@ class bd_map
 	void disp()
 	{
 		cout << "Playing field: " << (n_ + 1) << "x" << (m_ + 1) << endl;
-		cout << "Robot at (" << (r_x_ + 1) << ", " << (r_y_ + 1) << "), ";
-		cout << "exit at (" << (l_x_ + 1) << ", " << (l_y_ + 1) << ")" << endl;
-		for (int i = 0; i <= m_; ++i)
+		cout << "Robot at (" << r_x_ << ", " << r_y_ << "), ";
+		cout << "exit at (" << l_x_ << ", " << l_y_ << ")" << endl;
+		for (int i = m_; i >= 0; --i)
 		{
 			for (int j = 0; j <= n_; ++j)
 			{
@@ -106,35 +108,123 @@ class bd_map
 
 	char &operator()(int x, int y)
 	{
-		return x_[y][x];
+		if (x < 0 || x > n_ || y < 0 || y > m_)
+		{
+			throw out_of_range("D'oh.");
+		}
+
+		return x_[m_ - y][x];
+	}
+
+	void move(char c)
+	{
+		switch (c)
+		{
+			case 'L':
+				l();
+				break;
+			case 'R':
+				r();
+				break;
+			case 'U':
+				u();
+				break;
+			case 'D':
+				d();
+				break;
+			case 'W':
+				break;
+			case 'A':
+				break;
+			default:
+				throw invalid_argument("Huh?");
+		}
+	}
+
+	void l()
+	{
+	}
+
+	void r()
+	{
+	}
+
+	void u()
+	{
+	}
+
+	void d()
+	{
 	}
 };
 
 class bd_game
 {
 	public:
+	bool finished_;
+	bool aborted_;
+	int sc_;
 	bd_map m_;
 
-	bd_game(): m_(bd_map())
+	bd_game(): finished_(false), aborted_(true),
+			sc_(0), m_(bd_map())
 	{
+	}
+
+	void disp()
+	{
+		cout << "Score: " << sc_ << endl;
+		m_.disp();
+	}
+
+	void move(char c)
+	{
+		m_.move(c);
+		update();
+		end(c);
+	}
+
+	void update()
+	{
+	}
+
+	void end(char c)
+	{
+		if (c == 'A')
+		{
+			aborted_ = true;
+			finished_ = true;
+		}
 	}
 };
 
-int main()
+int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);
+
+	ifstream is;
+
+	if (argc > 1)
+	{
+		interactive = true;
+		is.open(argv[1]);
+	}
+	else
+	{
+		interactive = false;
+	}
 
 	bd_game g;
 
 	char c;
 
-	cin.unsetf(ios_base::skipws);
+	(interactive ? is : cin).unsetf(ios_base::skipws);
 
 	while (true)
 	{
-		cin >> c;
+		(interactive ? is : cin) >> c;
 
-		if (cin.eof())
+		if ((interactive ? is : cin).eof())
 		{
 			break;
 		}
@@ -144,21 +234,31 @@ int main()
 
 	g.m_.fin_init();
 
-#ifdef INTERACTIVE
-
-	g.m_.disp();
-
-#else
-
-	/*
-	while (true)
+	if (interactive)
 	{
+		cin.setf(ios_base::skipws);
+	
+		while (! g.finished_)
+		{
+			g.disp();
+	
+			cin >> c;
+	
+			g.move(c);
+		}
+
+		g.disp();
 	}
-	*/
-
-	cout << "A" << endl;
-
-#endif
+	else
+	{
+		/*
+		while (true)
+		{
+		}
+		*/
+	
+		cout << "A" << endl;
+	}
 
 	return 0;
 }
