@@ -1,5 +1,5 @@
 
-#undef DEV
+#define DEV
 
 #include <iostream>
 #include <fstream>
@@ -360,11 +360,13 @@ class bd_game
 	bool escaped_;
 	bool died_;
 	bool aborted_;
+	bool changed_;
 	int ls_;
 	int sc_;
 	bd_map m_;
 
 	bd_game(): finished_(false), escaped_(false), died_(false), aborted_(false),
+			changed_(false),
 			ls_(0), sc_(0), m_(bd_map())
 	{
 	}
@@ -409,6 +411,8 @@ class bd_game
 	{
 		bd_map nm = m_;
 
+		changed_ = false;
+
 		for (int i = 0; i <= m_.m_; ++i)
 		{
 			for (int j = 0; j <= m_.n_; ++j)
@@ -417,6 +421,7 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j, i - 1) = '*';
+					changed_ = true;
 					if (j == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
 						died_ = true;
@@ -427,6 +432,7 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j + 1, i - 1) = '*';
+					changed_ = true;
 					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
 						died_ = true;
@@ -438,6 +444,7 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j - 1, i - 1) = '*';
+					changed_ = true;
 					if (j - 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
 						died_ = true;
@@ -448,6 +455,7 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j + 1, i - 1) = '*';
+					changed_ = true;
 					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
 						died_ = true;
@@ -459,6 +467,7 @@ class bd_game
 		if (m_.ls_ == 0)
 		{
 			nm(m_.l_x_, m_.l_y_) = 'O';
+			changed_ = true;
 		}
 
 		m_ = nm;
@@ -511,9 +520,12 @@ int cost_func(bd_game &g1, bd_game &g2)
 		return 1;
 	}
 
-	// TODO: stuff.
+	if (g1.m_.r_x_ != g2.m_.r_x_ || g1.m_.r_y_ != g2.m_.r_y_ || g2.changed_)
+	{
+		return 0;
+	}
 
-	return 0;
+	return -1000000;
 }
 
 // TODO: lookahead.

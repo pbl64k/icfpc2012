@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./install && ./lifter <contest5.map
+./install && ./lifter <contest1.map
 
