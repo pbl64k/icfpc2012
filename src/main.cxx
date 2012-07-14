@@ -32,6 +32,7 @@ bool interactive;
 string sol;
 size_t best;
 int best_sc;
+char last_m;
 
 class bd_map
 {
@@ -521,9 +522,14 @@ int cost_func(bd_game &g1, bd_game &g2)
 		return -1000000;
 	}
 
+	if (g2.m_.r_x_ == g2.m_.l_x_ && g2.m_.r_y_ == g2.m_.l_y_)
+	{
+		return 1000;
+	}
+
 	if (g2.ls_ > g1.ls_)
 	{
-		return 25;
+		return 50;
 	}
 
 	if (g2.m_.get_c_dist() < g1.m_.get_c_dist())
@@ -539,10 +545,10 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
-// TODO: Make it steadfast.
 // TODO?: Penalize waits better?
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
+// TODO: Penalize future gains?
 class bd_robo
 {
 	public:
@@ -566,7 +572,7 @@ class bd_robo
 		char m;
 
 		// 6 is too much, 4 probably too low.
-		pair<char, int> mm = pick_a_move(5);
+		pair<char, int> mm = pick_a_move(5, last_m);
 
 		m = mm.first;
 
@@ -578,6 +584,11 @@ class bd_robo
 
 		g_.move(m);
 
+		if (m != 'W')
+		{
+			last_m = m;
+		}
+
 		if (g_.get_b_sc() > best_sc)
 		{
 			best_sc = g_.get_b_sc();
@@ -585,7 +596,7 @@ class bd_robo
 		}
 	}
 
-	pair<char, int> pick_a_move(int lookahead)
+	pair<char, int> pick_a_move(int lookahead, char last_m)
 	{
 		vector<char> res(0);
 		res.push_back('A');
@@ -611,13 +622,15 @@ class bd_robo
 
 			int f;
 
-			f = cost_func(g_, g0) - (i == 4 ? 1 : 0);
+			// Do not penalize backtracking.
+			// Surprisingly, inability to walk backwards is detrimental to a robot's navigational ken.
+			f = cost_func(g_, g0) - (i == 4 ? 1 : 0) - (m[i] == last_m ? 0 : 0);
 
 			if (f > -1000000 && lookahead > 0)
 			{
 				bd_robo r0(g0);
 
-				pair<char, int> m0 = r0.pick_a_move(lookahead - 1);
+				pair<char, int> m0 = r0.pick_a_move(lookahead - 1, m[i] == 'W' ? last_m : m[i]);
 
 				f += m0.second;
 			}
@@ -633,6 +646,17 @@ class bd_robo
 				res.push_back(m[i]);
 			}
 		}
+
+#ifdef DEV
+		/*
+		cout << res_f << " Moves: ";
+		for (vector<char>::iterator iter = res.begin(); iter != res.end(); ++iter)
+		{
+			cout << (*iter);
+		}
+		cout << endl;
+		*/
+#endif
 
 		int ix = rand() % res.size();
 
@@ -773,6 +797,7 @@ int main(int argc, char **argv)
 	{
 		best = 0;
 		best_sc = g.sc_;
+		last_m = '0';
 
 		while (! g.finished_)
 		{
