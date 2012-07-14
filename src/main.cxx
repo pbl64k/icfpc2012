@@ -30,15 +30,8 @@ using namespace std;
 bool interactive;
 
 string sol;
-
-void terminate(int signal)
-{
-	signal = signal;
-
-	cout << sol << "A" << endl;
-
-	exit(EXIT_SUCCESS);
-}
+size_t best;
+int best_sc;
 
 class bd_map
 {
@@ -508,6 +501,16 @@ class bd_game
 			finished_ = true;
 		}
 	}
+
+	int get_b_sc()
+	{
+		if (finished_)
+		{
+			return sc_;
+		}
+
+		return sc_ + (ls_ * 25);
+	}
 };
 
 // TODO: Improved cost function.
@@ -563,7 +566,7 @@ class bd_robo
 		char m;
 
 		// 6 is too much, 4 probably too low.
-		pair<char, int> mm = pick_a_move(4);
+		pair<char, int> mm = pick_a_move(5);
 
 		m = mm.first;
 
@@ -574,6 +577,12 @@ class bd_robo
 #endif
 
 		g_.move(m);
+
+		if (g_.get_b_sc() > best_sc)
+		{
+			best_sc = g_.get_b_sc();
+			best = sol.size();
+		}
 	}
 
 	pair<char, int> pick_a_move(int lookahead)
@@ -631,7 +640,31 @@ class bd_robo
 	}
 };
 
-// TODO: Best score.
+bd_game g;
+
+void terminate(int signal)
+{
+	signal = signal;
+
+#ifdef DEV
+	g.disp();
+
+	cout << sol << endl;
+	cout << "Best score: " << best_sc << " Best pos: " << best << endl;
+#endif
+
+	if (best == sol.size())
+	{
+		cout << sol << endl;
+	}
+	else
+	{
+		cout << sol.substr(0, best) << "A" << endl;
+	}
+
+	exit(EXIT_SUCCESS);
+}
+
 // TODO: flooding.
 // TODO: trampolines.
 int main(int argc, char **argv)
@@ -660,8 +693,6 @@ int main(int argc, char **argv)
 		sis.open(argv[2]);
 		sis.unsetf(ios_base::skipws);
 	}
-
-	bd_game g;
 
 	char c;
 
@@ -740,6 +771,9 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		best = 0;
+		best_sc = g.sc_;
+
 		while (! g.finished_)
 		{
 			bd_robo r(g);
@@ -751,16 +785,17 @@ int main(int argc, char **argv)
 		g.disp();
 
 		cout << sol << endl;
-#else
-		if (g.sc_ > 0)
+		cout << "Best score: " << best_sc << " Best pos: " << best << endl;
+#endif
+
+		if (best == sol.size())
 		{
 			cout << sol << endl;
 		}
 		else
 		{
-			cout << "A" << endl;
+			cout << sol.substr(0, best) << "A" << endl;
 		}
-#endif
 	}
 
 	return 0;
