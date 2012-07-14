@@ -548,7 +548,6 @@ int cost_func(bd_game &g1, bd_game &g2)
 // TODO?: Penalize waits better?
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
-// TODO: Penalize future gains?
 class bd_robo
 {
 	public:
@@ -632,7 +631,8 @@ class bd_robo
 
 				pair<char, int> m0 = r0.pick_a_move(lookahead - 1, m[i] == 'W' ? last_m : m[i]);
 
-				f += m0.second;
+				// A BAD idea.
+				f += (1 * m0.second) / 1;
 			}
 	
 			if (f > res_f)
