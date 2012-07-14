@@ -545,7 +545,6 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
-// TODO?: Penalize waits better?
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
 class bd_robo

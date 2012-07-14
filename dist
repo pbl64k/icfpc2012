@@ -1,4 +1,12 @@
 #!/bin/sh
 
+if [ -e icfp-95119924.tgz ]; then
+	echo 'Remove the old dist, you moron.'
+	exit 1
+fi;
+if { grep '#define DEV' src/main.cxx >/dev/null; }; then
+	echo 'The hell?! You forgot the DEV, cretin.'
+	exit 1
+fi;
 git archive --format=tar HEAD | gzip >icfp-95119924.tgz
 
