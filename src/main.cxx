@@ -4,15 +4,17 @@
 #include <istream>
 #include <ostream>
 
-#include <cstdlib>
 #include <cctype>
+#include <cmath>
 #include <csignal>
+#include <cstdlib>
 
 #include <algorithm>
 #include <deque>
 #include <list>
 #include <map>
 #include <numeric>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -44,11 +46,13 @@ class bd_map
 	int ls_;
 	bool last_n_;
 	vector<vector<char> > x_;
+	set<pair<int, int> > lambdae_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
 			ls_(0), last_n_(true),
-			x_(vector<vector<char> >(1))
+			x_(vector<vector<char> >(1)),
+			lambdae_(set<pair<int, int> >())
 	{
 		x_.push_back(vector<char>(0));
 	}
@@ -100,6 +104,17 @@ class bd_map
 		--m_;
 		r_y_ = m_ - r_y_;
 		l_y_ = m_ - l_y_;
+
+		for (int i = 0; i <= m_; ++i)
+		{
+			for (int j = 0; j <= n_; ++j)
+			{
+				if ((*this)(j, i) == '\\')
+				{
+					lambdae_.insert(make_pair(j, i));
+				}
+			}
+		}
 	}
 
 	void disp()
@@ -305,6 +320,28 @@ class bd_map
 
 		return true;
 	}
+
+	pair<int, int> get_n_l()
+	{
+		pair<int, int> r = make_pair(l_x_, l_y_);
+		int r_dist = 1000000;
+		int c_dist;
+
+		for (set<pair<int, int> >::iterator l_iter = lambdae_.begin();
+				l_iter != lambdae_.end(); ++l_iter)
+		{
+			c_dist = abs(r_x_ - l_iter->first) + abs(r_y_ - l_iter->second);
+			cout << c_dist << endl;
+
+			if (c_dist < r_dist)
+			{
+				r = make_pair(l_iter->first, l_iter->second);
+				r_dist = c_dist;
+			}
+		}
+
+		return r;
+	}
 };
 
 class bd_game
@@ -325,7 +362,10 @@ class bd_game
 
 	void disp()
 	{
-		cout << "Score: " << sc_ << " Lambdas: " << ls_ << endl;
+		pair<int, int> nl = m_.get_n_l();
+
+		cout << "Score: " << sc_ << " Lambdas: " << ls_ << " (" << m_.ls_ << " remaining)" << endl;
+		cout << "Target: (" << nl.first << ", " << nl.second << ")" << endl;
 		m_.disp();
 
 		if (escaped_)
@@ -347,6 +387,8 @@ class bd_game
 		--sc_;
 		if (m_.move(c))
 		{
+			--m_.ls_;
+			m_.lambdae_.erase(make_pair(m_.r_x_, m_.r_y_));
 			++ls_;
 			sc_ += 25;
 		}
@@ -405,7 +447,7 @@ class bd_game
 			}
 		}
 
-		if (ls_ == m_.ls_)
+		if (m_.ls_ == 0)
 		{
 			nm(m_.l_x_, m_.l_y_) = 'O';
 		}
@@ -430,6 +472,7 @@ class bd_game
 			aborted_ = true;
 			finished_ = true;
 
+			++sc_;
 			sc_ += ls_ * 25;
 
 			return;
