@@ -680,9 +680,18 @@ int main(int argc, char **argv)
 
 #ifdef DEV
 		g.disp();
-#endif
 
 		cout << sol << endl;
+#else
+		if (g.sc_ > 0)
+		{
+			cout << sol << endl;
+		}
+		else
+		{
+			cout << "A" << endl;
+		}
+#endif
 	}
 
 	return 0;
