@@ -1,5 +1,5 @@
 
-#undef DEV
+#define DEV
 
 #include <iostream>
 #include <fstream>
@@ -163,7 +163,7 @@ class bd_map
 			case 'A':
 				return w();
 			default:
-				throw invalid_argument("Huh?");
+				throw invalid_argument(string("Huh? - ") + c);
 		}
 	}
 
@@ -529,6 +529,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 }
 
 // TODO: lookahead.
+// TODO: Make it steadfast.
 class bd_robo
 {
 	public:
@@ -551,14 +552,16 @@ class bd_robo
 	{
 		char m;
 
-		m = pick_a_move();
+		pair<char, int> mm = pick_a_move(4);
+
+		m = mm.first;
 
 		sol += m;
 
 		g_.move(m);
 	}
 
-	char pick_a_move()
+	pair<char, int> pick_a_move(int lookahead)
 	{
 		vector<char> res(0);
 		res.push_back('A');
@@ -566,7 +569,7 @@ class bd_robo
 
 		if (g_.sc_ < -1024)
 		{
-			return 'A';
+			return make_pair('A', res_f);
 		}
 
 		char m[6] = "LRUDW";
@@ -577,8 +580,19 @@ class bd_robo
 		{
 			g0 = emulate(m[i]);
 
-			int f = cost_func(g_, g0);
+			int f;
 
+			f = cost_func(g_, g0);
+
+			if (f > -1000000 && lookahead > 0)
+			{
+				bd_robo r0(g0);
+
+				pair<char, int> m0 = r0.pick_a_move(lookahead - 1);
+
+				f += m0.second;
+			}
+	
 			if (f > res_f)
 			{
 				res_f = f;
@@ -593,7 +607,7 @@ class bd_robo
 
 		int ix = rand() % res.size();
 
-		return res[ix];
+		return make_pair(res[ix], res_f);
 	}
 };
 
@@ -603,7 +617,7 @@ int main(int argc, char **argv)
 
 	srand(time(NULL));
 
-	ifstream is;
+	ifstream is, sis;
 
 	if (argc > 1)
 	{
@@ -613,6 +627,15 @@ int main(int argc, char **argv)
 	else
 	{
 		interactive = false;
+	}
+
+	bool file_sol = false;
+
+	if (argc > 2)
+	{
+		file_sol = true;
+		sis.open(argv[2]);
+		sis.unsetf(ios_base::skipws);
 	}
 
 	bd_game g;
@@ -646,24 +669,47 @@ int main(int argc, char **argv)
 		{
 			g.disp();
 	
-			c = toupper(PressAnyKey(""));
-
-			switch (c)
+			if (file_sol)
 			{
-				case 'H':
-					c = 'L';
+				sis >> c;
+
+				if (sis.eof())
+				{
 					break;
-				case 'J':
-					c = 'D';
-					break;
-				case 'K':
-					c = 'U';
-					break;
-				case 'L':
-					c = 'R';
-					break;
+				}
+			}
+			else
+			{
+				c = toupper(PressAnyKey(""));
+	
+				switch (c)
+				{
+					case 'H':
+						c = 'L';
+						break;
+					case 'J':
+						c = 'D';
+						break;
+					case 'K':
+						c = 'U';
+						break;
+					case 'L':
+						c = 'R';
+						break;
+					case ' ':
+						c = 'W';
+						break;
+					case 'Q':
+						c = 'A';
+						break;
+				}
 			}
 	
+			if (c != 'L' && c != 'R' && c != 'U' && c != 'D' && c != 'W' && c != 'A')
+			{
+				c = 'A';
+			}
+
 			g.move(c);
 		}
 
