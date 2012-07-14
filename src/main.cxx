@@ -525,7 +525,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 
 	if (g2.m_.get_c_dist() < g1.m_.get_c_dist())
 	{
-		return 1;
+		return 3;
 	}
 
 	if (g1.m_.r_x_ != g2.m_.r_x_ || g1.m_.r_y_ != g2.m_.r_y_ || g2.changed_)
@@ -536,9 +536,10 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
-// TODO: lookahead.
 // TODO: Make it steadfast.
 // TODO?: Penalize waits better?
+// TODO: ACTUAL pathfinding. Duh.
+// TODO: Prioritize targets.
 class bd_robo
 {
 	public:
@@ -561,6 +562,7 @@ class bd_robo
 	{
 		char m;
 
+		// 6 is too much, 4 probably too low.
 		pair<char, int> mm = pick_a_move(4);
 
 		m = mm.first;
@@ -568,7 +570,7 @@ class bd_robo
 		sol += m;
 
 #ifdef DEV
-		cout << "Next move: " << m << endl;
+		//cout << "Next move: " << m << endl;
 #endif
 
 		g_.move(m);
