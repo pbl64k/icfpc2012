@@ -1,5 +1,5 @@
 
-#define DEV
+#undef DEV
 
 #include <iostream>
 #include <fstream>
@@ -344,6 +344,13 @@ class bd_map
 
 		return r;
 	}
+
+	int get_c_dist()
+	{
+		pair<int, int> nl = get_n_l();
+
+		return abs(r_x_ - nl.first) + abs(r_y_ - nl.second);
+	}
 };
 
 class bd_game
@@ -487,6 +494,29 @@ class bd_game
 	}
 };
 
+int cost_func(bd_game &g1, bd_game &g2)
+{
+	if (g2.died_)
+	{
+		return -1000000;
+	}
+
+	if (g2.ls_ > g1.ls_)
+	{
+		return 25;
+	}
+
+	if (g2.m_.get_c_dist() < g1.m_.get_c_dist())
+	{
+		return 1;
+	}
+
+	// TODO: stuff.
+
+	return 0;
+}
+
+// TODO: lookahead.
 class bd_robo
 {
 	public:
@@ -494,6 +524,15 @@ class bd_robo
 
 	bd_robo(bd_game &g): g_(g)
 	{
+	}
+
+	bd_game emulate(char m)
+	{
+		bd_game g_prime = g_;
+
+		g_prime.move(m);
+
+		return g_prime;
 	}
 
 	void solve()
@@ -509,16 +548,40 @@ class bd_robo
 
 	char pick_a_move()
 	{
-		if (g_.sc_ < -8192)
+		vector<char> res(0);
+		res.push_back('A');
+		int res_f = -1000;
+
+		if (g_.sc_ < -1024)
 		{
 			return 'A';
 		}
 
 		char m[6] = "LRUDW";
 
-		int ix = rand() % 5;
+		bd_game g0;
 
-		return m[ix];
+		for (int i = 0; i < 5; ++i)
+		{
+			g0 = emulate(m[i]);
+
+			int f = cost_func(g_, g0);
+
+			if (f > res_f)
+			{
+				res_f = f;
+				res = vector<char>();
+				res.push_back(m[i]);
+			}
+			else if (f == res_f)
+			{
+				res.push_back(m[i]);
+			}
+		}
+
+		int ix = rand() % res.size();
+
+		return res[ix];
 	}
 };
 
