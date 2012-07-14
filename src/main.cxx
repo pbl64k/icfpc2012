@@ -110,6 +110,13 @@ class bd_map
 
 		for (int i = 0; i <= m_; ++i)
 		{
+			int cs = x_[m_ - i].size() - 1;
+
+			for (int j = 0; j != n_ - cs; ++j)
+			{
+				x_[m_ - i].push_back(' ');
+			}
+
 			for (int j = 0; j <= n_; ++j)
 			{
 				if ((*this)(j, i) == '\\')
@@ -503,6 +510,7 @@ class bd_game
 	}
 };
 
+// TODO: Improved cost function.
 int cost_func(bd_game &g1, bd_game &g2)
 {
 	if (g2.died_)
@@ -530,6 +538,8 @@ int cost_func(bd_game &g1, bd_game &g2)
 
 // TODO: lookahead.
 // TODO: Make it steadfast.
+// TODO: Penalty on waiting.
+// TODO: Recognize effective waits and prune.
 class bd_robo
 {
 	public:
@@ -558,6 +568,10 @@ class bd_robo
 
 		sol += m;
 
+#ifdef DEV
+		cout << "Next move: " << m << endl;
+#endif
+
 		g_.move(m);
 	}
 
@@ -582,7 +596,7 @@ class bd_robo
 
 			int f;
 
-			f = cost_func(g_, g0);
+			f = cost_func(g_, g0) - (i == 4 ? 1 : 0);
 
 			if (f > -1000000 && lookahead > 0)
 			{
@@ -611,6 +625,9 @@ class bd_robo
 	}
 };
 
+// TODO: Best score.
+// TODO: flooding.
+// TODO: trampolines.
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);
