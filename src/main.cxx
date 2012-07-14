@@ -1,4 +1,6 @@
 
+#define DEV
+
 #include <iostream>
 #include <fstream>
 #include <istream>
@@ -8,6 +10,7 @@
 #include <cmath>
 #include <csignal>
 #include <cstdlib>
+#include <ctime>
 
 #include <algorithm>
 #include <deque>
@@ -331,7 +334,6 @@ class bd_map
 				l_iter != lambdae_.end(); ++l_iter)
 		{
 			c_dist = abs(r_x_ - l_iter->first) + abs(r_y_ - l_iter->second);
-			cout << c_dist << endl;
 
 			if (c_dist < r_dist)
 			{
@@ -485,9 +487,46 @@ class bd_game
 	}
 };
 
+class bd_robo
+{
+	public:
+	bd_game &g_;
+
+	bd_robo(bd_game &g): g_(g)
+	{
+	}
+
+	void solve()
+	{
+		char m;
+
+		m = pick_a_move();
+
+		sol += m;
+
+		g_.move(m);
+	}
+
+	char pick_a_move()
+	{
+		if (g_.sc_ < -8192)
+		{
+			return 'A';
+		}
+
+		char m[6] = "LRUDW";
+
+		int ix = rand() % 5;
+
+		return m[ix];
+	}
+};
+
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);
+
+	srand(time(NULL));
 
 	ifstream is;
 
@@ -557,13 +596,18 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		/*
-		while (true)
+		while (! g.finished_)
 		{
+			bd_robo r(g);
+
+			r.solve();
 		}
-		*/
-	
-		cout << "A" << endl;
+
+#ifdef DEV
+		g.disp();
+#endif
+
+		cout << sol << endl;
 	}
 
 	return 0;
