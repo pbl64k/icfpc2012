@@ -538,8 +538,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 
 // TODO: lookahead.
 // TODO: Make it steadfast.
-// TODO: Penalty on waiting.
-// TODO: Recognize effective waits and prune.
+// TODO?: Penalize waits better?
 class bd_robo
 {
 	public:
@@ -593,6 +592,11 @@ class bd_robo
 		for (int i = 0; i < 5; ++i)
 		{
 			g0 = emulate(m[i]);
+
+			if (i != 4 && g_.m_.r_x_ == g0.m_.r_x_ && g_.m_.r_y_ == g0.m_.r_y_)
+			{
+				continue;
+			}
 
 			int f;
 
