@@ -59,6 +59,7 @@ class bd_map
 	map<pair<int, int>, int> beards_;
 	int beards_shaven_;
 	set<pair<int, int> > rlist_;
+	int lrocks_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
@@ -73,7 +74,8 @@ class bd_map
 			trevlink_(map<char, list<char> >()),
 			grrt_(25), razors_(0),
 			beards_(map<pair<int, int>, int>()),
-			beards_shaven_(0)
+			beards_shaven_(0),
+			lrocks_(0)
 	{
 		x_.push_back(vector<char>(0));
 	}
@@ -82,6 +84,8 @@ class bd_map
 	{
 		switch (c)
 		{
+			case '@':
+				++lrocks_;
 			case '\\':
 				++ls_;
 			case 'A':
@@ -271,10 +275,11 @@ class bd_map
 				}
 				ok = true;
 				break;
+			case '@':
 			case '*':
 				if (valid(nx - 1, ny) && (*this)(nx - 1, ny) == ' ')
 				{
-					(*this)(nx - 1, ny) = '*';
+					(*this)(nx - 1, ny) = mv_tgt;
 					ok = true;
 				}
 				break;
@@ -341,10 +346,11 @@ class bd_map
 				}
 				ok = true;
 				break;
+			case '@':
 			case '*':
 				if (valid(nx + 1, ny) && (*this)(nx + 1, ny) == ' ')
 				{
-					(*this)(nx + 1, ny) = '*';
+					(*this)(nx + 1, ny) = mv_tgt;
 					ok = true;
 				}
 				break;
@@ -632,10 +638,12 @@ class bd_game
 	int ls_;
 	int sc_;
 	bd_map m_;
+	int rocks_broken_;
 
 	bd_game(): finished_(false), escaped_(false), died_(false), aborted_(false),
 			changed_(false),
-			ls_(0), sc_(0), m_(bd_map())
+			ls_(0), sc_(0), m_(bd_map()),
+			rocks_broken_(0)
 	{
 	}
 
@@ -682,15 +690,23 @@ class bd_game
 		bd_map nm = m_;
 
 		changed_ = false;
+		rocks_broken_ = 0;
 
 		for (int i = 0; i <= m_.m_; ++i)
 		{
 			for (int j = 0; j <= m_.n_; ++j)
 			{
-				if (m_.valid(j, i - 1) && m_(j, i) == '*' && m_(j, i - 1) == ' ')
+				if (m_.valid(j, i - 1) && (m_(j, i) == '*' || m_(j, i) == '@') && m_(j, i - 1) == ' ')
 				{
 					nm(j, i) = ' ';
-					nm(j, i - 1) = '*';
+					nm(j, i - 1) = m_(j, i);
+					if (m_(j, i) == '@' && m_.valid(j, i - 2) && m_(j, i - 2) != ' ')
+					{
+						nm(j, i - 1) = '\\';
+						nm.lambdae_.insert(make_pair(j, i - 1));
+						--nm.lrocks_;
+						++rocks_broken_;
+					}
 					changed_ = true;
 					if (j == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
@@ -698,10 +714,19 @@ class bd_game
 					}
 				}
 				else if (m_.valid(j, i - 1) && m_.valid(j + 1, i) && /* m_.valid(j + 1, i - 1) && */
-						m_(j, i) == '*' && m_(j, i - 1) == '*' && m_(j + 1, i) == ' ' && m_(j + 1, i - 1) == ' ')
+						(m_(j, i) == '*' || m_(j, i) == '@') &&
+						(m_(j, i - 1) == '*' || m_(j, i - 1) == '@') &&
+						m_(j + 1, i) == ' ' && m_(j + 1, i - 1) == ' ')
 				{
 					nm(j, i) = ' ';
-					nm(j + 1, i - 1) = '*';
+					nm(j + 1, i - 1) = m_(j, i);
+					if (m_(j, i) == '@' && m_.valid(j + 1, i - 2) && m_(j + 1, i - 2) != ' ')
+					{
+						nm(j + 1, i - 1) = '\\';
+						nm.lambdae_.insert(make_pair(j + 1, i - 1));
+						--nm.lrocks_;
+						++rocks_broken_;
+					}
 					changed_ = true;
 					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
@@ -709,11 +734,19 @@ class bd_game
 					}
 				}
 				else if (m_.valid(j, i - 1) && m_.valid(j + 1, i) && m_.valid(j - 1, i) && /* some obviously true checks skipped */
-						m_(j, i) == '*' && m_(j, i - 1) == '*' &&
+						(m_(j, i) == '*' || m_(j, i) == '@') &&
+						(m_(j, i - 1) == '*' || m_(j, i - 1) == '@') &&
 						(m_(j + 1, i) != ' ' || m_(j + 1, i - 1) != ' ') && m_(j - 1, i) == ' ' && m_(j - 1, i - 1) == ' ')
 				{
 					nm(j, i) = ' ';
-					nm(j - 1, i - 1) = '*';
+					nm(j - 1, i - 1) = m_(j, i);
+					if (m_(j, i) == '@' && m_.valid(j - 1, i - 2) && m_(j - 1, i - 2) != ' ')
+					{
+						nm(j - 1, i - 1) = '\\';
+						nm.lambdae_.insert(make_pair(j - 1, i - 1));
+						--nm.lrocks_;
+						++rocks_broken_;
+					}
 					changed_ = true;
 					if (j - 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
@@ -721,10 +754,18 @@ class bd_game
 					}
 				}
 				else if (m_.valid(j, i - 1) && m_.valid(j + 1, i) && /* m_.valid(j + 1, i - 1) && */
-						m_(j, i) == '*' && m_(j, i - 1) == '\\' && m_(j + 1, i) == ' ' && m_(j + 1, i - 1) == ' ')
+						(m_(j, i) == '*' || m_(j, i) == '@') &&
+						m_(j, i - 1) == '\\' && m_(j + 1, i) == ' ' && m_(j + 1, i - 1) == ' ')
 				{
 					nm(j, i) = ' ';
-					nm(j + 1, i - 1) = '*';
+					nm(j + 1, i - 1) = m_(j, i);
+					if (m_(j, i) == '@' && m_.valid(j + 1, i - 2) && m_(j + 1, i - 2) != ' ')
+					{
+						nm(j + 1, i - 1) = '\\';
+						nm.lambdae_.insert(make_pair(j + 1, i - 1));
+						--nm.lrocks_;
+						++rocks_broken_;
+					}
 					changed_ = true;
 					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
@@ -736,42 +777,42 @@ class bd_game
 					if (m_.beards_[make_pair(j, i)] == 0)
 					{
 						nm.beards_[make_pair(j, i)] = nm.grrt_ - 1;
-						if (nm.valid(j - 1, i) && nm(j - 1, i) == ' ')
+						if (nm.valid(j - 1, i) && m_(j - 1, i) == ' ')
 						{
 							nm(j - 1, i) = 'W';
 							nm.beards_[make_pair(j - 1, i)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j + 1, i) && nm(j + 1, i) == ' ')
+						if (nm.valid(j + 1, i) && m_(j + 1, i) == ' ')
 						{
 							nm(j + 1, i) = 'W';
 							nm.beards_[make_pair(j + 1, i)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j, i - 1) && nm(j, i - 1) == ' ')
+						if (nm.valid(j, i - 1) && m_(j, i - 1) == ' ')
 						{
 							nm(j, i - 1) = 'W';
 							nm.beards_[make_pair(j, i - 1)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j, i + 1) && nm(j, i + 1) == ' ')
+						if (nm.valid(j, i + 1) && m_(j, i + 1) == ' ')
 						{
 							nm(j, i + 1) = 'W';
 							nm.beards_[make_pair(j, i + 1)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j - 1, i - 1) && nm(j - 1, i - 1) == ' ')
+						if (nm.valid(j - 1, i - 1) && m_(j - 1, i - 1) == ' ')
 						{
 							nm(j - 1, i - 1) = 'W';
 							nm.beards_[make_pair(j - 1, i - 1)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j + 1, i + 1) && nm(j + 1, i + 1) == ' ')
+						if (nm.valid(j + 1, i + 1) && m_(j + 1, i + 1) == ' ')
 						{
 							nm(j + 1, i + 1) = 'W';
 							nm.beards_[make_pair(j + 1, i + 1)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j - 1, i + 1) && nm(j - 1, i + 1) == ' ')
+						if (nm.valid(j - 1, i + 1) && m_(j - 1, i + 1) == ' ')
 						{
 							nm(j - 1, i + 1) = 'W';
 							nm.beards_[make_pair(j - 1, i + 1)] = nm.grrt_ - 1;
 						}
-						if (nm.valid(j + 1, i - 1) && nm(j + 1, i - 1) == ' ')
+						if (nm.valid(j + 1, i - 1) && m_(j + 1, i - 1) == ' ')
 						{
 							nm(j + 1, i - 1) = 'W';
 							nm.beards_[make_pair(j + 1, i - 1)] = nm.grrt_ - 1;
@@ -1046,7 +1087,6 @@ void terminate(int signal)
 	exit(EXIT_SUCCESS);
 }
 
-// TODO: MORE lambdas?!! WTH?!
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);
