@@ -728,11 +728,11 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
-// TODO: Duh! determine "stuckness" by comparing to best_sc.
 // TODO: Glob best robo, backtrack if stuck.
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
 // TODO: Tgt bottom lambdas in flooded areas?
+// TODO (cont.): IDEA - favour staying low in flooded areas?
 // TODO: Regions?
 class bd_robo
 {
@@ -788,7 +788,7 @@ class bd_robo
 		res.push_back('A');
 		int res_f = -1000;
 
-		if (g_.sc_ < -1024)
+		if (g_.get_b_sc() < best_sc - max(((g_.m_.m_ + g_.m_.n_) * 3), 512))
 		{
 			return make_pair('A', res_f);
 		}
