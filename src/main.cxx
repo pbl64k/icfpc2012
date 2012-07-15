@@ -49,6 +49,10 @@ class bd_map
 	int flooding_;
 	int waterproof_;
 	int flcnt_, wpcnt_;
+	map<char, pair<int, int> > trampolines_;
+	map<char, pair<int, int> > tramp_tgts_;
+	map<char, char> tlink_;
+	map<char, list<char> > trevlink_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
@@ -56,7 +60,11 @@ class bd_map
 			x_(vector<vector<char> >(1)),
 			lambdae_(set<pair<int, int> >()),
 			water_(0), flooding_(0), waterproof_(10),
-			flcnt_(0), wpcnt_(10)
+			flcnt_(0), wpcnt_(10),
+			trampolines_(map<char, pair<int, int> >()),
+			tramp_tgts_(map<char, pair<int, int> >()),
+			tlink_(map<char, char>()),
+			trevlink_(map<char, list<char> >())
 	{
 		x_.push_back(vector<char>(0));
 	}
@@ -67,18 +75,44 @@ class bd_map
 		{
 			case '\\':
 				++ls_;
+			case 'A':
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'E':
+			case 'F':
+			case 'G':
+			case 'H':
+			case 'I':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
 			case '#':
 			case ' ':
 			case '.':
 			case '*':
 			case 'R':
 			case 'L':
-				if (c == 'R')
+				if (c >= 'A' && c <= 'I')
+				{
+					trampolines_[c] = make_pair(i_, m_);
+				}
+				else if (c >= '1' && c <= '9')
+				{
+					tramp_tgts_[c] = make_pair(i_, m_);
+				}
+				else if (c == 'R')
 				{
 					r_x_ = i_;
 					r_y_ = m_;
 				}
-				if (c == 'L')
+				else if (c == 'L')
 				{
 					l_x_ = i_;
 					l_y_ = m_;
@@ -108,6 +142,18 @@ class bd_map
 		--m_;
 		r_y_ = m_ - r_y_;
 		l_y_ = m_ - l_y_;
+
+		for (map<char, pair<int, int> >::iterator iter = trampolines_.begin();
+				iter != trampolines_.end(); ++iter)
+		{
+			iter->second.second = m_ - iter->second.second;
+		}
+
+		for (map<char, pair<int, int> >::iterator iter = tramp_tgts_.begin();
+				iter != tramp_tgts_.end(); ++iter)
+		{
+			iter->second.second = m_ - iter->second.second;
+		}
 
 		for (int i = 0; i <= m_; ++i)
 		{
@@ -186,7 +232,9 @@ class bd_map
 
 		bool r = false, ok = false;
 
-		switch ((*this)(nx, ny))
+		char mv_tgt = (*this)(nx, ny);
+
+		switch (mv_tgt)
 		{
 			case '\\':
 				r = true;
@@ -201,6 +249,30 @@ class bd_map
 					(*this)(nx - 1, ny) = '*';
 					ok = true;
 				}
+				break;
+			case 'A':
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'E':
+			case 'F':
+			case 'G':
+			case 'H':
+			case 'I':
+				(*this)(r_x_, r_y_) = ' ';
+				r_x_ = nx; r_y_ = ny;
+				(*this)(r_x_, r_y_) = ' ';
+				char tr_tgt = tlink_[mv_tgt];
+				int tr_x = tramp_tgts_[tr_tgt].first;
+				int tr_y = tramp_tgts_[tr_tgt].second;
+				r_x_ = tr_x; r_y_ = tr_y;
+				(*this)(r_x_, r_y_) = 'R';
+				for (list<char>::iterator iter = trevlink_[tr_tgt].begin();
+						iter != trevlink_[tr_tgt].end(); ++iter)
+				{
+					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+				}
+				return false;
 		}
 
 		if (ok)
@@ -225,7 +297,9 @@ class bd_map
 
 		bool r = false, ok = false;
 
-		switch ((*this)(nx, ny))
+		char mv_tgt = (*this)(nx, ny);
+
+		switch (mv_tgt)
 		{
 			case '\\':
 				r = true;
@@ -240,6 +314,30 @@ class bd_map
 					(*this)(nx + 1, ny) = '*';
 					ok = true;
 				}
+				break;
+			case 'A':
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'E':
+			case 'F':
+			case 'G':
+			case 'H':
+			case 'I':
+				(*this)(r_x_, r_y_) = ' ';
+				r_x_ = nx; r_y_ = ny;
+				(*this)(r_x_, r_y_) = ' ';
+				char tr_tgt = tlink_[mv_tgt];
+				int tr_x = tramp_tgts_[tr_tgt].first;
+				int tr_y = tramp_tgts_[tr_tgt].second;
+				r_x_ = tr_x; r_y_ = tr_y;
+				(*this)(r_x_, r_y_) = 'R';
+				for (list<char>::iterator iter = trevlink_[tr_tgt].begin();
+						iter != trevlink_[tr_tgt].end(); ++iter)
+				{
+					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+				}
+				return false;
 		}
 
 		if (ok)
@@ -264,7 +362,9 @@ class bd_map
 
 		bool r = false, ok = false;
 
-		switch ((*this)(nx, ny))
+		char mv_tgt = (*this)(nx, ny);
+
+		switch (mv_tgt)
 		{
 			case '\\':
 				r = true;
@@ -272,6 +372,30 @@ class bd_map
 			case '.':
 			case 'O':
 				ok = true;
+				break;
+			case 'A':
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'E':
+			case 'F':
+			case 'G':
+			case 'H':
+			case 'I':
+				(*this)(r_x_, r_y_) = ' ';
+				r_x_ = nx; r_y_ = ny;
+				(*this)(r_x_, r_y_) = ' ';
+				char tr_tgt = tlink_[mv_tgt];
+				int tr_x = tramp_tgts_[tr_tgt].first;
+				int tr_y = tramp_tgts_[tr_tgt].second;
+				r_x_ = tr_x; r_y_ = tr_y;
+				(*this)(r_x_, r_y_) = 'R';
+				for (list<char>::iterator iter = trevlink_[tr_tgt].begin();
+						iter != trevlink_[tr_tgt].end(); ++iter)
+				{
+					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+				}
+				return false;
 		}
 
 		if (ok)
@@ -296,7 +420,9 @@ class bd_map
 
 		bool r = false, ok = false;
 
-		switch ((*this)(nx, ny))
+		char mv_tgt = (*this)(nx, ny);
+
+		switch (mv_tgt)
 		{
 			case '\\':
 				r = true;
@@ -304,6 +430,30 @@ class bd_map
 			case '.':
 			case 'O':
 				ok = true;
+				break;
+			case 'A':
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'E':
+			case 'F':
+			case 'G':
+			case 'H':
+			case 'I':
+				(*this)(r_x_, r_y_) = ' ';
+				r_x_ = nx; r_y_ = ny;
+				(*this)(r_x_, r_y_) = ' ';
+				char tr_tgt = tlink_[mv_tgt];
+				int tr_x = tramp_tgts_[tr_tgt].first;
+				int tr_y = tramp_tgts_[tr_tgt].second;
+				r_x_ = tr_x; r_y_ = tr_y;
+				(*this)(r_x_, r_y_) = 'R';
+				for (list<char>::iterator iter = trevlink_[tr_tgt].begin();
+						iter != trevlink_[tr_tgt].end(); ++iter)
+				{
+					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+				}
+				return false;
 		}
 
 		if (ok)
@@ -712,22 +862,13 @@ void terminate(int signal)
 
 	cout << sol << endl;
 	cout << "Best score: " << best_sc << " Best pos: " << best << endl;
-	cout << best_sol << endl;
 #endif
 
-	if (best_sol == sol)
-	{
-		cout << best_sol << endl;
-	}
-	else
-	{
-		cout << best_sol.substr(0, best) << "A" << endl;
-	}
+	cout << best_sol << endl;
 
 	exit(EXIT_SUCCESS);
 }
 
-// TODO: trampolines.
 // TODO: beards. F@#$.
 int main(int argc, char **argv)
 {
@@ -795,7 +936,7 @@ int main(int argc, char **argv)
 					g.m_.water_ = w;
 
 #ifdef DEV
-				cout << "Water level set to " << w << endl;
+					cout << "Water level set to " << w << endl;
 #endif
 				}
 				else if (meta == "Flooding")
@@ -808,7 +949,7 @@ int main(int argc, char **argv)
 					g.m_.flcnt_ = f;
 
 #ifdef DEV
-				cout << "Flooding rate set to " << f << endl;
+					cout << "Flooding rate set to " << f << endl;
 #endif
 				}
 				else if (meta == "Waterproof")
@@ -821,7 +962,22 @@ int main(int argc, char **argv)
 					g.m_.wpcnt_ = w;
 
 #ifdef DEV
-				cout << "Waterproof counter set to " << w << endl;
+					cout << "Waterproof counter set to " << w << endl;
+#endif
+				}
+				else if (meta == "Trampoline")
+				{
+					char from, to;
+
+					(interactive ? is : cin) >> from;
+					(interactive ? is : cin) >> meta;
+					(interactive ? is : cin) >> to;
+					
+					g.m_.tlink_[from] = to;
+					g.m_.trevlink_[to].push_front(from);
+
+#ifdef DEV
+					cout << "Trampoline " << from << " linked to " << to << endl;
 #endif
 				}
 			}
@@ -904,17 +1060,9 @@ int main(int argc, char **argv)
 
 		cout << sol << endl;
 		cout << "Best score: " << best_sc << " Best pos: " << best << endl;
-		cout << best_sol << endl;
 #endif
 
-		if (best_sol == sol)
-		{
-			cout << best_sol << endl;
-		}
-		else
-		{
-			cout << best_sol.substr(0, best) << "A" << endl;
-		}
+		cout << best_sol << endl;
 	}
 
 	return 0;
