@@ -870,6 +870,7 @@ void terminate(int signal)
 }
 
 // TODO: beards. F@#$.
+// TODO: MORE lambdas?!! WTH?!
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);
@@ -1052,7 +1053,14 @@ int main(int argc, char **argv)
 		{
 			bd_robo r(g);
 
-			r.solve();
+			try
+			{
+				r.solve();
+			}
+			catch (bad_alloc e)
+			{
+				break;
+			}
 		}
 
 #ifdef DEV
