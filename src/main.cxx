@@ -545,8 +545,10 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
+// TODO: Glob best robo, backtrack if stuck.
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
+// TODO: Regions?
 class bd_robo
 {
 	public:
@@ -690,6 +692,7 @@ void terminate(int signal)
 
 // TODO: flooding.
 // TODO: trampolines.
+// TODO: beards. F@#$.
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);

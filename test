@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./install && time ./lifter <contest$1.map
+./install && time ./lifter <$1.map
 
