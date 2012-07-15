@@ -10,3 +10,7 @@ Team "This can't possibly be the end of the wo-"
 
 WARNING: KEEP AWAY FROM LOCAL MAXIMA.
 
+Sorry about being unable to set up the standard VM, had to test on my usual
+dev box. Since this doesn't require anything but g++ and a little bit of
+POSIXy stuff, it should compile on squeeze just fine.
+

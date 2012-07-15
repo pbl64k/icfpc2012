@@ -58,6 +58,7 @@ class bd_map
 	int razors_;
 	map<pair<int, int>, int> beards_;
 	int beards_shaven_;
+	set<pair<int, int> > rlist_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
@@ -179,6 +180,10 @@ class bd_map
 				if ((*this)(j, i) == '\\')
 				{
 					lambdae_.insert(make_pair(j, i));
+				}
+				else if ((*this)(j, i) == '!')
+				{
+					rlist_.insert(make_pair(j, i));
 				}
 				else if ((*this)(j, i) == 'W')
 				{
@@ -591,8 +596,19 @@ class bd_map
 			}
 		}
 
-		// TODO
 		// it's not necessarily a good idea, but we'll go actively looking for razors
+
+		for (set<pair<int, int> >::iterator l_iter = rlist_.begin();
+				l_iter != rlist_.end(); ++l_iter)
+		{
+			c_dist = abs(r_x_ - l_iter->first) + abs(r_y_ - l_iter->second);
+
+			if (c_dist < r_dist)
+			{
+				r = make_pair(l_iter->first, l_iter->second);
+				r_dist = c_dist;
+			}
+		}
 
 		return r;
 	}
