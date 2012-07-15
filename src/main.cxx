@@ -1,5 +1,5 @@
 
-#define DEV
+#undef DEV
 
 #include <iostream>
 #include <fstream>
