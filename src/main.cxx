@@ -30,6 +30,7 @@ using namespace std;
 bool interactive;
 
 string sol;
+string best_sol;
 size_t best;
 int best_sc;
 char last_m;
@@ -545,6 +546,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
+// TODO: Duh! determine "stuckness" by comparing to best_sc.
 // TODO: Glob best robo, backtrack if stuck.
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
@@ -593,6 +595,7 @@ class bd_robo
 		{
 			best_sc = g_.get_b_sc();
 			best = sol.size();
+			best_sol = sol;
 		}
 	}
 
@@ -676,15 +679,16 @@ void terminate(int signal)
 
 	cout << sol << endl;
 	cout << "Best score: " << best_sc << " Best pos: " << best << endl;
+	cout << best_sol << endl;
 #endif
 
-	if (best == sol.size())
+	if (best_sol == sol)
 	{
-		cout << sol << endl;
+		cout << best_sol << endl;
 	}
 	else
 	{
-		cout << sol.substr(0, best) << "A" << endl;
+		cout << best_sol.substr(0, best) << "A" << endl;
 	}
 
 	exit(EXIT_SUCCESS);
@@ -813,15 +817,16 @@ int main(int argc, char **argv)
 
 		cout << sol << endl;
 		cout << "Best score: " << best_sc << " Best pos: " << best << endl;
+		cout << best_sol << endl;
 #endif
 
-		if (best == sol.size())
+		if (best_sol == sol)
 		{
-			cout << sol << endl;
+			cout << best_sol << endl;
 		}
 		else
 		{
-			cout << sol.substr(0, best) << "A" << endl;
+			cout << best_sol.substr(0, best) << "A" << endl;
 		}
 	}
 
