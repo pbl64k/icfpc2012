@@ -36,6 +36,7 @@ int best_sc;
 char last_m;
 
 // TODO?: record the number of beard growths?
+// TODO?: add trampolines to target list?!
 class bd_map
 {
 	public:
@@ -639,11 +640,12 @@ class bd_game
 	int sc_;
 	bd_map m_;
 	int rocks_broken_;
+	int rocks_moving_;
 
 	bd_game(): finished_(false), escaped_(false), died_(false), aborted_(false),
 			changed_(false),
 			ls_(0), sc_(0), m_(bd_map()),
-			rocks_broken_(0)
+			rocks_broken_(0), rocks_moving_(0)
 	{
 	}
 
@@ -700,6 +702,10 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j, i - 1) = m_(j, i);
+					if(m_(j, i) == '@')
+					{
+						++rocks_moving_;
+					}
 					if (m_(j, i) == '@' && m_.valid(j, i - 2) && m_(j, i - 2) != ' ')
 					{
 						nm(j, i - 1) = '\\';
@@ -720,6 +726,10 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j + 1, i - 1) = m_(j, i);
+					if(m_(j, i) == '@')
+					{
+						++rocks_moving_;
+					}
 					if (m_(j, i) == '@' && m_.valid(j + 1, i - 2) && m_(j + 1, i - 2) != ' ')
 					{
 						nm(j + 1, i - 1) = '\\';
@@ -740,6 +750,10 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j - 1, i - 1) = m_(j, i);
+					if(m_(j, i) == '@')
+					{
+						++rocks_moving_;
+					}
 					if (m_(j, i) == '@' && m_.valid(j - 1, i - 2) && m_(j - 1, i - 2) != ' ')
 					{
 						nm(j - 1, i - 1) = '\\';
@@ -759,6 +773,10 @@ class bd_game
 				{
 					nm(j, i) = ' ';
 					nm(j + 1, i - 1) = m_(j, i);
+					if(m_(j, i) == '@')
+					{
+						++rocks_moving_;
+					}
 					if (m_(j, i) == '@' && m_.valid(j + 1, i - 2) && m_(j + 1, i - 2) != ' ')
 					{
 						nm(j + 1, i - 1) = '\\';
@@ -901,6 +919,7 @@ class bd_game
 };
 
 // TODO: Improved cost function.
+// TODO: Bummer. Lambda stones crashing into each other can make a map unsolvable.
 int cost_func(bd_game &g1, bd_game &g2)
 {
 	if (g2.died_)
@@ -921,6 +940,13 @@ int cost_func(bd_game &g1, bd_game &g2)
 	if (g2.m_.razors_ > g1.m_.razors_)
 	{
 		res += 100;
+	}
+
+	res += g2.rocks_moving_ * 10;
+
+	if (g2.m_.lrocks_ < g1.m_.lrocks_)
+	{
+		res += (g1.m_.lrocks_ - g2.m_.lrocks_) * 100;
 	}
 
 	if (g2.ls_ > g1.ls_)
@@ -946,6 +972,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 // TODO: Prioritize targets.
 // TODO: Tgt bottom lambdas in flooded areas?
 // TODO (cont.): IDEA - favour staying low in flooded areas?
+// TODO: Teach it to dive?
 // TODO: Regions?
 class bd_robo
 {
