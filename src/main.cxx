@@ -35,6 +35,7 @@ size_t best;
 int best_sc;
 char last_m;
 
+// TODO?: record the number of beard growths?
 class bd_map
 {
 	public:
@@ -126,10 +127,6 @@ class bd_map
 					l_x_ = i_;
 					l_y_ = m_;
 				}
-				else if (c == 'W')
-				{
-					beards_[make_pair(i_, m_)] = 0;
-				}
 				x_[m_].push_back(c);
 				n_ = max(n_, i_);
 				++i_;
@@ -168,16 +165,6 @@ class bd_map
 			iter->second.second = m_ - iter->second.second;
 		}
 
-		map<pair<int, int>, int> bnew;
-
-		for (map<pair<int, int>, int>::iterator iter = beards_.begin();
-				iter != beards_.end(); ++iter)
-		{
-			bnew[make_pair(iter->first.first, m_ - iter->first.second)] = grrt_ - 1;
-		}
-
-		beards_ = bnew;
-
 		for (int i = 0; i <= m_; ++i)
 		{
 			int cs = x_[m_ - i].size() - 1;
@@ -192,6 +179,10 @@ class bd_map
 				if ((*this)(j, i) == '\\')
 				{
 					lambdae_.insert(make_pair(j, i));
+				}
+				else if ((*this)(j, i) == 'W')
+				{
+					beards_[make_pair(j, i)] = grrt_ - 1;
 				}
 			}
 		}
@@ -600,6 +591,8 @@ class bd_map
 			}
 		}
 
+		// it's not necessarily a good idea, but we'll go actively looking for razors
+
 		return r;
 	}
 
@@ -775,7 +768,7 @@ class bd_game
 			}
 		}
 
-		if (m_.ls_ == 0)
+		if (m_.ls_ == 0 && nm(m_.l_x_, m_.l_y_) != 'O')
 		{
 			nm(m_.l_x_, m_.l_y_) = 'O';
 			changed_ = true;
@@ -862,19 +855,28 @@ int cost_func(bd_game &g1, bd_game &g2)
 		return 1000;
 	}
 
+	int res = 0;
+
+	res += g2.m_.beards_shaven_ * 25;
+
+	if (g2.m_.razors_ > g1.m_.razors_)
+	{
+		res += 100;
+	}
+
 	if (g2.ls_ > g1.ls_)
 	{
-		return 50;
+		return 50 + res;
 	}
 
 	if (g2.m_.get_c_dist() < g1.m_.get_c_dist())
 	{
-		return 3;
+		return 3 + res;
 	}
 
 	if (g1.m_.r_x_ != g2.m_.r_x_ || g1.m_.r_y_ != g2.m_.r_y_ || g2.changed_)
 	{
-		return 0;
+		return 0 + res;
 	}
 
 	return -1000000;
@@ -945,15 +947,20 @@ class bd_robo
 			return make_pair('A', res_f);
 		}
 
-		char m[6] = "LRUDW";
+		char m[7] = "LRUDWS";
 
 		bd_game g0;
 
-		for (int i = 0; i < 5; ++i)
+		for (int i = 0; i < 6; ++i)
 		{
 			g0 = emulate(m[i]);
 
-			if (i != 4 && g_.m_.r_x_ == g0.m_.r_x_ && g_.m_.r_y_ == g0.m_.r_y_)
+			if (i < 4 && g_.m_.r_x_ == g0.m_.r_x_ && g_.m_.r_y_ == g0.m_.r_y_)
+			{
+				continue;
+			}
+
+			if (i == 5 && g0.m_.beards_shaven_ == 0)
 			{
 				continue;
 			}
@@ -968,7 +975,7 @@ class bd_robo
 			{
 				bd_robo r0(g0);
 
-				pair<char, int> m0 = r0.pick_a_move(lookahead - 1, m[i] == 'W' ? last_m : m[i]);
+				pair<char, int> m0 = r0.pick_a_move(lookahead - 1, i < 4 ? last_m : m[i]);
 
 				// A BAD idea.
 				f += (1 * m0.second) / 1;
