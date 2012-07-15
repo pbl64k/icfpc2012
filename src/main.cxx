@@ -1,5 +1,5 @@
 
-#undef DEV
+#define DEV
 
 #include <iostream>
 #include <fstream>
@@ -30,6 +30,8 @@ using namespace std;
 bool interactive;
 
 time_t exec_start;
+
+int tlim;
 
 string sol;
 string best_sol;
@@ -683,6 +685,7 @@ class bd_game
 		cout << "Target: (" << nl.first << ", " << nl.second << ")" << endl;
 		cout << "Water level: " << m_.water_ << " Flooding counter: " << m_.flcnt_ << " WP counter: " << m_.wpcnt_ << endl;
 		cout << "Razors: " << m_.razors_ << endl;
+		cout << "Beards shaven this turn: " << m_.beards_shaven_ << endl;
 		m_.disp();
 
 		if (escaped_)
@@ -997,7 +1000,8 @@ int cost_func(bd_game &g1, bd_game &g2)
 	int res = 0;
 
 	// Without an additional incentive to shave, my Robo seems to go all Bender-like.
-	res += g2.m_.beards_shaven_ * 25;
+	// Okay, make it 100.
+	res += g2.m_.beards_shaven_ * 100;
 
 	if (g2.m_.razors_ > g1.m_.razors_)
 	{
@@ -1100,7 +1104,7 @@ class bd_robo
 	{
 		vector<char> res(0);
 		res.push_back('A');
-		int res_f = -1000;
+		int res_f = -10000;
 
 		if (g_.get_b_sc() < best_sc - max(((g_.m_.m_ + g_.m_.n_) * 3), 256))
 		{
@@ -1193,6 +1197,12 @@ int main(int argc, char **argv)
 	signal(SIGINT, &terminate);
 
 	exec_start = time(NULL);
+
+#ifdef DEV
+	tlim = 30;
+#else
+	tlim = 120;
+#endif
 
 	srand(time(NULL));
 
