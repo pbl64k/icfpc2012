@@ -868,32 +868,33 @@ class bd_game
 			changed_ = true;
 		}
 
-		m_ = nm;
-
-		if (m_.flooding_ > 0)
+		if (nm.flooding_ > 0)
 		{
-			--m_.flcnt_;
+			--nm.flcnt_;
 
-			if (m_.flcnt_ == 0)
+			if (nm.flcnt_ == 0)
 			{
-				m_.flcnt_ = m_.flooding_;
-				++m_.water_;
+				nm.flcnt_ = nm.flooding_;
+				++nm.water_;
 			}
 		}
 
-		if (m_.r_y_ <= m_.water_)
+		if (m_.r_y_ > m_.water_)
 		{
-			--m_.wpcnt_;
+			nm.wpcnt_ = nm.waterproof_;
+		}
 
-			if (m_.wpcnt_ == 0)
+		if (nm.r_y_ <= nm.water_)
+		{
+			--nm.wpcnt_;
+
+			if (nm.wpcnt_ == 0)
 			{
 				died_ = true;
 			}
 		}
-		else
-		{
-			m_.wpcnt_ = m_.waterproof_;
-		}
+
+		m_ = nm;
 	}
 
 	void end(char c)
