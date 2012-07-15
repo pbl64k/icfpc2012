@@ -591,6 +591,7 @@ class bd_map
 			}
 		}
 
+		// TODO
 		// it's not necessarily a good idea, but we'll go actively looking for razors
 
 		return r;
@@ -857,6 +858,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 
 	int res = 0;
 
+	// Without an additional incentive to shave, my Robo seems to go all Bender-like.
 	res += g2.m_.beards_shaven_ * 25;
 
 	if (g2.m_.razors_ > g1.m_.razors_)
