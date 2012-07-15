@@ -53,6 +53,10 @@ class bd_map
 	map<char, pair<int, int> > tramp_tgts_;
 	map<char, char> tlink_;
 	map<char, list<char> > trevlink_;
+	int grrt_;
+	int razors_;
+	map<pair<int, int>, int> beards_;
+	int beards_shaven_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
@@ -64,7 +68,10 @@ class bd_map
 			trampolines_(map<char, pair<int, int> >()),
 			tramp_tgts_(map<char, pair<int, int> >()),
 			tlink_(map<char, char>()),
-			trevlink_(map<char, list<char> >())
+			trevlink_(map<char, list<char> >()),
+			grrt_(25), razors_(0),
+			beards_(map<pair<int, int>, int>()),
+			beards_shaven_(0)
 	{
 		x_.push_back(vector<char>(0));
 	}
@@ -99,6 +106,8 @@ class bd_map
 			case '*':
 			case 'R':
 			case 'L':
+			case 'W':
+			case '!':
 				if (c >= 'A' && c <= 'I')
 				{
 					trampolines_[c] = make_pair(i_, m_);
@@ -116,6 +125,10 @@ class bd_map
 				{
 					l_x_ = i_;
 					l_y_ = m_;
+				}
+				else if (c == 'W')
+				{
+					beards_[make_pair(i_, m_)] = 0;
 				}
 				x_[m_].push_back(c);
 				n_ = max(n_, i_);
@@ -154,6 +167,16 @@ class bd_map
 		{
 			iter->second.second = m_ - iter->second.second;
 		}
+
+		map<pair<int, int>, int> bnew;
+
+		for (map<pair<int, int>, int>::iterator iter = beards_.begin();
+				iter != beards_.end(); ++iter)
+		{
+			bnew[make_pair(iter->first.first, m_ - iter->first.second)] = grrt_ - 1;
+		}
+
+		beards_ = bnew;
 
 		for (int i = 0; i <= m_; ++i)
 		{
@@ -202,6 +225,8 @@ class bd_map
 
 	bool move(char c)
 	{
+		beards_shaven_ = 0;
+
 		switch (c)
 		{
 			case 'L':
@@ -214,6 +239,8 @@ class bd_map
 				return d();
 			case 'W':
 				return w();
+			case 'S':
+				return s();
 			case 'A':
 				return w();
 			default:
@@ -241,6 +268,11 @@ class bd_map
 			case ' ':
 			case '.':
 			case 'O':
+			case '!':
+				if (mv_tgt == '!')
+				{
+					++razors_;
+				}
 				ok = true;
 				break;
 			case '*':
@@ -306,6 +338,11 @@ class bd_map
 			case ' ':
 			case '.':
 			case 'O':
+			case '!':
+				if (mv_tgt == '!')
+				{
+					++razors_;
+				}
 				ok = true;
 				break;
 			case '*':
@@ -371,6 +408,11 @@ class bd_map
 			case ' ':
 			case '.':
 			case 'O':
+			case '!':
+				if (mv_tgt == '!')
+				{
+					++razors_;
+				}
 				ok = true;
 				break;
 			case 'A':
@@ -429,6 +471,11 @@ class bd_map
 			case ' ':
 			case '.':
 			case 'O':
+			case '!':
+				if (mv_tgt == '!')
+				{
+					++razors_;
+				}
 				ok = true;
 				break;
 			case 'A':
@@ -462,6 +509,59 @@ class bd_map
 			r_x_ = nx; r_y_ = ny;
 			(*this)(r_x_, r_y_) = 'R';
 			return r;
+		}
+
+		return w();
+	}
+
+	bool s()
+	{
+		if (razors_ > 0)
+		{
+			--razors_;
+
+			int i = r_y_, j = r_x_;
+
+			if (valid(j - 1, i) && (*this)(j - 1, i) == 'W')
+			{
+				(*this)(j - 1, i) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j, i - 1) && (*this)(j, i - 1) == 'W')
+			{
+				(*this)(j, i - 1) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j + 1, i) && (*this)(j + 1, i) == 'W')
+			{
+				(*this)(j + 1, i) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j, i + 1) && (*this)(j, i + 1) == 'W')
+			{
+				(*this)(j, i + 1) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j - 1, i - 1) && (*this)(j - 1, i - 1) == 'W')
+			{
+				(*this)(j - 1, i - 1) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j + 1, i + 1) && (*this)(j + 1, i + 1) == 'W')
+			{
+				(*this)(j + 1, i + 1) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j - 1, i + 1) && (*this)(j - 1, i + 1) == 'W')
+			{
+				(*this)(j - 1, i + 1) = ' ';
+				++beards_shaven_;
+			}
+			if (valid(j + 1, i - 1) && (*this)(j + 1, i - 1) == 'W')
+			{
+				(*this)(j + 1, i - 1) = ' ';
+				++beards_shaven_;
+			}
 		}
 
 		return w();
@@ -536,6 +636,7 @@ class bd_game
 		cout << "Score: " << sc_ << " Lambdas: " << ls_ << " (" << m_.ls_ << " remaining)" << endl;
 		cout << "Target: (" << nl.first << ", " << nl.second << ")" << endl;
 		cout << "Water level: " << m_.water_ << " Flooding counter: " << m_.flcnt_ << " WP counter: " << m_.wpcnt_ << endl;
+		cout << "Razors: " << m_.razors_ << endl;
 		m_.disp();
 
 		if (escaped_)
@@ -618,6 +719,57 @@ class bd_game
 					if (j + 1 == m_.r_x_ && i - 1 == m_.r_y_ + 1)
 					{
 						died_ = true;
+					}
+				}
+				else if (m_(j, i) == 'W')
+				{
+					if (m_.beards_[make_pair(j, i)] == 0)
+					{
+						nm.beards_[make_pair(j, i)] = nm.grrt_ - 1;
+						if (nm.valid(j - 1, i) && nm(j - 1, i) == ' ')
+						{
+							nm(j - 1, i) = 'W';
+							nm.beards_[make_pair(j - 1, i)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j + 1, i) && nm(j + 1, i) == ' ')
+						{
+							nm(j + 1, i) = 'W';
+							nm.beards_[make_pair(j + 1, i)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j, i - 1) && nm(j, i - 1) == ' ')
+						{
+							nm(j, i - 1) = 'W';
+							nm.beards_[make_pair(j, i - 1)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j, i + 1) && nm(j, i + 1) == ' ')
+						{
+							nm(j, i + 1) = 'W';
+							nm.beards_[make_pair(j, i + 1)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j - 1, i - 1) && nm(j - 1, i - 1) == ' ')
+						{
+							nm(j - 1, i - 1) = 'W';
+							nm.beards_[make_pair(j - 1, i - 1)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j + 1, i + 1) && nm(j + 1, i + 1) == ' ')
+						{
+							nm(j + 1, i + 1) = 'W';
+							nm.beards_[make_pair(j + 1, i + 1)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j - 1, i + 1) && nm(j - 1, i + 1) == ' ')
+						{
+							nm(j - 1, i + 1) = 'W';
+							nm.beards_[make_pair(j - 1, i + 1)] = nm.grrt_ - 1;
+						}
+						if (nm.valid(j + 1, i - 1) && nm(j + 1, i - 1) == ' ')
+						{
+							nm(j + 1, i - 1) = 'W';
+							nm.beards_[make_pair(j + 1, i - 1)] = nm.grrt_ - 1;
+						}
+					}
+					else
+					{
+						--nm.beards_[make_pair(j, i)];
 					}
 				}
 			}
@@ -869,7 +1021,6 @@ void terminate(int signal)
 	exit(EXIT_SUCCESS);
 }
 
-// TODO: beards. F@#$.
 // TODO: MORE lambdas?!! WTH?!
 int main(int argc, char **argv)
 {
@@ -981,6 +1132,34 @@ int main(int argc, char **argv)
 					cout << "Trampoline " << from << " linked to " << to << endl;
 #endif
 				}
+				else if (meta == "Growth")
+				{
+					int r;
+
+					(interactive ? is : cin) >> r;
+					
+					g.m_.grrt_ = r;
+
+#ifdef DEV
+					cout << "Wadler's Factor set to " << r << endl;
+#endif
+				}
+				else if (meta == "Razors")
+				{
+					int r;
+
+					(interactive ? is : cin) >> r;
+					
+					g.m_.razors_ = r;
+
+#ifdef DEV
+					cout << "Number of razors carried changed to " << r << endl;
+#endif
+				}
+				else
+				{
+					throw invalid_argument(string("Bad metadata tag: ") + meta);
+				}
 			}
 
 			break;
@@ -1010,6 +1189,7 @@ int main(int argc, char **argv)
 			{
 				c = toupper(PressAnyKey(""));
 	
+				// roguelike controls
 				switch (c)
 				{
 					case 'H':
@@ -1024,7 +1204,7 @@ int main(int argc, char **argv)
 					case 'L':
 						c = 'R';
 						break;
-					case ' ':
+					case '.':
 						c = 'W';
 						break;
 					case 'Q':
@@ -1033,7 +1213,7 @@ int main(int argc, char **argv)
 				}
 			}
 	
-			if (c != 'L' && c != 'R' && c != 'U' && c != 'D' && c != 'W' && c != 'A')
+			if (c != 'L' && c != 'R' && c != 'U' && c != 'D' && c != 'W' && c != 'A' && c != 'S')
 			{
 				c = 'A';
 			}
