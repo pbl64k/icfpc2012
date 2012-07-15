@@ -29,6 +29,8 @@ using namespace std;
 
 bool interactive;
 
+time_t exec_start;
+
 string sol;
 string best_sol;
 size_t best;
@@ -659,11 +661,17 @@ class bd_game
 	bd_map m_;
 	int rocks_broken_;
 	int rocks_moving_;
+	deque<pair<int, int> > lmoves_;
+	pair<int, int> beacon_of_unhope_;
+	int bgauge_;
 
 	bd_game(): finished_(false), escaped_(false), died_(false), aborted_(false),
 			changed_(false),
 			ls_(0), sc_(0), m_(bd_map()),
-			rocks_broken_(0), rocks_moving_(0)
+			rocks_broken_(0), rocks_moving_(0),
+			lmoves_(deque<pair<int, int> >()),
+			beacon_of_unhope_(pair<int, int>()),
+			bgauge_(0)
 	{
 	}
 
@@ -700,6 +708,43 @@ class bd_game
 			m_.lambdae_.erase(make_pair(m_.r_x_, m_.r_y_));
 			++ls_;
 			sc_ += 25;
+		}
+		lmoves_.push_back(make_pair(m_.r_x_, m_.r_y_));
+		if (lmoves_.size() > 16)
+		{
+			lmoves_.pop_front();
+		}
+		if (bgauge_ > 0)
+		{
+			--bgauge_;
+		}
+		else if (lmoves_.size() == 16)
+		{
+			int mr_x = 0, mr_y = 0;
+			for (deque<pair<int, int> >::iterator iter = lmoves_.begin();
+					iter != lmoves_.end(); ++iter)
+			{
+				mr_x += iter->first;
+				mr_y += iter->second;
+			}
+			mr_x /= 16;
+			mr_y /= 16;
+			int avg_d = 0;
+			for (deque<pair<int, int> >::iterator iter = lmoves_.begin();
+					iter != lmoves_.end(); ++iter)
+			{
+				avg_d += abs(mr_x - iter->first) + abs(mr_y - iter->second);
+			}
+			avg_d /= 16;
+			if (avg_d <= 2)
+			{
+				beacon_of_unhope_ = make_pair(mr_x, mr_y);
+				bgauge_ = 16;
+
+#ifdef DEV
+				//cout << "Setting the Beacon of Unhope at (" << mr_x << ", " << mr_y << ")" << endl;
+#endif
+			}
 		}
 		update();
 		end(c);
@@ -946,7 +991,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 
 	if (g2.m_.r_x_ == g2.m_.l_x_ && g2.m_.r_y_ == g2.m_.l_y_)
 	{
-		return 1000;
+		return 100000;
 	}
 
 	int res = 0;
@@ -960,6 +1005,14 @@ int cost_func(bd_game &g1, bd_game &g2)
 	}
 
 	res += g2.rocks_moving_ * 10;
+
+	// Okay, let's give it a shot...
+	if (g2.bgauge_ > 0)
+	{
+		res -=
+				max(4 - abs(g2.m_.r_x_ - g2.beacon_of_unhope_.first), 0) +
+				max(4 - abs(g2.m_.r_y_ - g2.beacon_of_unhope_.second), 0);
+	}
 
 	if (g2.m_.lrocks_ < g1.m_.lrocks_)
 	{
@@ -986,7 +1039,6 @@ int cost_func(bd_game &g1, bd_game &g2)
 
 // Global:
 // TODO: Glob best robo, backtrack if stuck.
-// TODO: Try breaking out of optima?
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
 // TODO: Regions?
@@ -1050,7 +1102,7 @@ class bd_robo
 		res.push_back('A');
 		int res_f = -1000;
 
-		if (g_.get_b_sc() < best_sc - max(((g_.m_.m_ + g_.m_.n_) * 3), 512))
+		if (g_.get_b_sc() < best_sc - max(((g_.m_.m_ + g_.m_.n_) * 3), 256))
 		{
 			return make_pair('A', res_f);
 		}
@@ -1079,7 +1131,7 @@ class bd_robo
 			// Surprisingly, inability to walk backwards is detrimental to a robot's navigational ken.
 			f = cost_func(g_, g0) - (i == 4 ? 1 : 0) - (m[i] == last_m ? 0 : 0);
 
-			if (f > -1000000 && lookahead > 0)
+			if (f > -100000 && lookahead > 0)
 			{
 				bd_robo r0(g0);
 
@@ -1139,6 +1191,8 @@ void terminate(int signal)
 int main(int argc, char **argv)
 {
 	signal(SIGINT, &terminate);
+
+	exec_start = time(NULL);
 
 	srand(time(NULL));
 
