@@ -45,12 +45,18 @@ class bd_map
 	bool last_n_;
 	vector<vector<char> > x_;
 	set<pair<int, int> > lambdae_;
+	int water_;
+	int flooding_;
+	int waterproof_;
+	int flcnt_, wpcnt_;
 
 	bd_map(): n_(0), m_(0), i_(0),
 			r_x_(0), r_y_(0), l_x_(0), l_y_(0),
 			ls_(0), last_n_(true),
 			x_(vector<vector<char> >(1)),
-			lambdae_(set<pair<int, int> >())
+			lambdae_(set<pair<int, int> >()),
+			water_(0), flooding_(0), waterproof_(10),
+			flcnt_(0), wpcnt_(10)
 	{
 		x_.push_back(vector<char>(0));
 	}
@@ -379,19 +385,20 @@ class bd_game
 
 		cout << "Score: " << sc_ << " Lambdas: " << ls_ << " (" << m_.ls_ << " remaining)" << endl;
 		cout << "Target: (" << nl.first << ", " << nl.second << ")" << endl;
+		cout << "Water level: " << m_.water_ << " Flooding counter: " << m_.flcnt_ << " WP counter: " << m_.wpcnt_ << endl;
 		m_.disp();
 
 		if (escaped_)
 		{
 			cout << "ESCAPED!" << endl;
 		}
-		else if (died_)
-		{
-			cout << "DIED." << endl;
-		}
 		else if (aborted_)
 		{
 			cout << "ABORTED." << endl;
+		}
+		else if (died_)
+		{
+			cout << "DIED." << endl;
 		}
 	}
 
@@ -473,6 +480,31 @@ class bd_game
 		}
 
 		m_ = nm;
+
+		if (m_.flooding_ > 0)
+		{
+			--m_.flcnt_;
+
+			if (m_.flcnt_ == 0)
+			{
+				m_.flcnt_ = m_.flooding_;
+				++m_.water_;
+			}
+		}
+
+		if (m_.r_y_ <= m_.water_)
+		{
+			--m_.wpcnt_;
+
+			if (m_.wpcnt_ == 0)
+			{
+				died_ = true;
+			}
+		}
+		else
+		{
+			m_.wpcnt_ = m_.waterproof_;
+		}
 	}
 
 	void end(char c)
@@ -550,6 +582,7 @@ int cost_func(bd_game &g1, bd_game &g2)
 // TODO: Glob best robo, backtrack if stuck.
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
+// TODO: Tgt bottom lambdas in flooded areas?
 // TODO: Regions?
 class bd_robo
 {
@@ -694,7 +727,6 @@ void terminate(int signal)
 	exit(EXIT_SUCCESS);
 }
 
-// TODO: flooding.
 // TODO: trampolines.
 // TODO: beards. F@#$.
 int main(int argc, char **argv)
@@ -739,6 +771,61 @@ int main(int argc, char **argv)
 
 		if (g.m_.add(c))
 		{
+			// read teh goddamn metadata.
+
+			string meta;
+
+			(interactive ? is : cin).setf(ios_base::skipws);
+
+			while (true)
+			{
+				(interactive ? is : cin) >> meta;
+
+				if ((interactive ? is : cin).eof())
+				{
+					break;
+				}
+
+				if (meta == "Water")
+				{
+					int w;
+
+					(interactive ? is : cin) >> w;
+					
+					g.m_.water_ = w;
+
+#ifdef DEV
+				cout << "Water level set to " << w << endl;
+#endif
+				}
+				else if (meta == "Flooding")
+				{
+					int f;
+
+					(interactive ? is : cin) >> f;
+					
+					g.m_.flooding_ = f;
+					g.m_.flcnt_ = f;
+
+#ifdef DEV
+				cout << "Flooding rate set to " << f << endl;
+#endif
+				}
+				else if (meta == "Waterproof")
+				{
+					int w;
+
+					(interactive ? is : cin) >> w;
+					
+					g.m_.waterproof_ = w;
+					g.m_.wpcnt_ = w;
+
+#ifdef DEV
+				cout << "Waterproof counter set to " << w << endl;
+#endif
+				}
+			}
+
 			break;
 		}
 	}
