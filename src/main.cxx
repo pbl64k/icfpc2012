@@ -37,6 +37,8 @@ string sol;
 string best_sol;
 size_t best;
 int best_sc;
+int br_best_sc;
+char best_last_m;
 char last_m;
 
 class bd_map
@@ -985,6 +987,9 @@ class bd_game
 	}
 };
 
+bd_game start_game;
+bd_game best_game;
+
 int cost_func(bd_game &g1, bd_game &g2)
 {
 	if (g2.died_)
@@ -1042,7 +1047,6 @@ int cost_func(bd_game &g1, bd_game &g2)
 }
 
 // Global:
-// TODO: Glob best robo, backtrack if stuck.
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
 // TODO: Regions?
@@ -1092,11 +1096,18 @@ class bd_robo
 			last_m = m;
 		}
 
+		if (g_.get_b_sc() > br_best_sc)
+		{
+			br_best_sc = g_.get_b_sc();
+		}
+
 		if (g_.get_b_sc() > best_sc)
 		{
 			best_sc = g_.get_b_sc();
 			best = sol.size();
 			best_sol = sol;
+			best_game = g_;
+			best_last_m = last_m;
 		}
 	}
 
@@ -1106,7 +1117,7 @@ class bd_robo
 		res.push_back('A');
 		int res_f = -10000;
 
-		if (g_.get_b_sc() < best_sc - max(((g_.m_.m_ + g_.m_.n_) * 3), 256))
+		if (g_.get_b_sc() < br_best_sc - max(((g_.m_.m_ + g_.m_.n_) * 3), 256))
 		{
 			return make_pair('A', res_f);
 		}
@@ -1175,13 +1186,14 @@ class bd_robo
 };
 
 bd_game g;
+bd_game cur_g;
 
 void terminate(int signal)
 {
 	signal = signal;
 
 #ifdef DEV
-	g.disp();
+	cur_g.disp();
 
 	cout << sol << endl;
 	cout << "Best score: " << best_sc << " Best pos: " << best << endl;
@@ -1199,7 +1211,7 @@ int main(int argc, char **argv)
 	exec_start = time(NULL);
 
 #ifdef DEV
-	tlim = 30;
+	tlim = 20;
 #else
 	tlim = 120;
 #endif
@@ -1403,13 +1415,23 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		cur_g = g;
+
+		start_game = cur_g;
+
+		sol = "";
 		best = 0;
-		best_sc = g.sc_;
+		best_sc = cur_g.get_b_sc();
+		br_best_sc = cur_g.get_b_sc();
+		best_last_m = '0';
+		best_game = cur_g;
 		last_m = '0';
 
-		while (! g.finished_)
+		bool enough = false;
+
+		do
 		{
-			bd_robo r(g);
+			bd_robo r(cur_g);
 
 			try
 			{
@@ -1419,10 +1441,52 @@ int main(int argc, char **argv)
 			{
 				break;
 			}
+
+			if (cur_g.finished_)
+			{
+#ifdef DEV
+				cout << "I'm kinda done..." << endl;
+				cout << sol << endl;
+				cout << "Best score: " << best_sc << " Best pos: " << best << endl;
+				cout << best_sol << endl;
+#endif
+
+				if (time(NULL) - exec_start > tlim)
+				{
+#ifdef DEV
+					cout << "Okay, that should suffice." << endl;
+#endif
+
+					enough = true;
+				}
+				else if (rand() % 2 == 0 && ! best_game.escaped_)
+				{
+#ifdef DEV
+					cout << "But I'm restarting from best so far!" << endl;
+#endif
+
+					sol = best_sol;
+					last_m = best_last_m;
+					br_best_sc = best_sc;
+					cur_g = best_game;
+				}
+				else
+				{
+#ifdef DEV
+					cout << "But I'm restarting from the very beginning!" << endl;
+#endif
+
+					sol = "";
+					last_m = '0';
+					cur_g = start_game;
+					br_best_sc = cur_g.get_b_sc();
+				}
+			}
 		}
+		while (! enough );
 
 #ifdef DEV
-		g.disp();
+		cur_g.disp();
 
 		cout << sol << endl;
 		cout << "Best score: " << best_sc << " Best pos: " << best << endl;
