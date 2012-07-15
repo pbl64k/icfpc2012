@@ -35,8 +35,6 @@ size_t best;
 int best_sc;
 char last_m;
 
-// TODO?: record the number of beard growths?
-// TODO?: add trampolines to target list?!
 class bd_map
 {
 	public:
@@ -305,6 +303,7 @@ class bd_map
 						iter != trevlink_[tr_tgt].end(); ++iter)
 				{
 					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+					trampolines_.erase(*iter);
 				}
 				return false;
 		}
@@ -376,6 +375,7 @@ class bd_map
 						iter != trevlink_[tr_tgt].end(); ++iter)
 				{
 					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+					trampolines_.erase(*iter);
 				}
 				return false;
 		}
@@ -439,6 +439,7 @@ class bd_map
 						iter != trevlink_[tr_tgt].end(); ++iter)
 				{
 					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+					trampolines_.erase(*iter);
 				}
 				return false;
 		}
@@ -502,6 +503,7 @@ class bd_map
 						iter != trevlink_[tr_tgt].end(); ++iter)
 				{
 					(*this)(trampolines_[*iter].first, trampolines_[*iter].second) = ' ';
+					trampolines_.erase(*iter);
 				}
 				return false;
 		}
@@ -616,6 +618,22 @@ class bd_map
 				r_dist = c_dist;
 			}
 		}
+
+		// this might be an even worse idea than the one above.
+
+		/*
+		for (map<char, pair<int, int> >::iterator l_iter = trampolines_.begin();
+				l_iter != trampolines_.end(); ++l_iter)
+		{
+			c_dist = abs(r_x_ - l_iter->second.first) + abs(r_y_ - l_iter->second.second);
+
+			if (c_dist < r_dist)
+			{
+				r = make_pair(l_iter->second.first, l_iter->second.second);
+				r_dist = c_dist;
+			}
+		}
+		*/
 
 		return r;
 	}
@@ -918,8 +936,6 @@ class bd_game
 	}
 };
 
-// TODO: Improved cost function.
-// TODO: Bummer. Lambda stones crashing into each other can make a map unsolvable.
 int cost_func(bd_game &g1, bd_game &g2)
 {
 	if (g2.died_)
@@ -967,13 +983,18 @@ int cost_func(bd_game &g1, bd_game &g2)
 	return -1000000;
 }
 
+// Global:
 // TODO: Glob best robo, backtrack if stuck.
+// TODO: Try breaking out of optima?
 // TODO: ACTUAL pathfinding. Duh.
 // TODO: Prioritize targets.
+// TODO: Regions?
+// TODO: How the HELL do I avoid dropping rocks on important stuff? Reachability. Duh.
+// Local:
 // TODO: Tgt bottom lambdas in flooded areas?
 // TODO (cont.): IDEA - favour staying low in flooded areas?
 // TODO: Teach it to dive?
-// TODO: Regions?
+// TODO: Bummer. Lambda stones crashing into each other can make a map unsolvable.
 class bd_robo
 {
 	public:
