@@ -1,16 +1,29 @@
 
-Pavel "pbl64k" Lepin <plepin, separator, put association for computing machinery's domain name here>
-
-AS
-
-Team "This can't possibly be the end of the wo-"
-
-"At first I was liek, Oh noes! it's Sokoban!,
- but then I was liek, Oh noes! it's Boulder Dash!"
-
-WARNING: KEEP AWAY FROM LOCAL MAXIMA.
-
-Sorry about being unable to set up the standard VM, had to test on my usual
-dev box. Since this doesn't require anything but g++ and a little bit of
-POSIXy stuff, it should compile on squeeze just fine.
+                   MINE   BEST
+contest1.map        212    212
+contest2.map        141    281
+contest3.map        275    275
+contest4.map        541    575
+contest5.map        806   1303
+contest6.map        721   1177
+contest7.map        869    869
+contest8.map       1100   1973
+contest9.map       2939   3095
+contest10.map      3379   3634
+flood1.map          337    945
+flood2.map          143    281
+flood3.map          716   1303
+flood4.map          856   1594
+flood5.map          284    575
+trampoline1.map     290    426
+trampoline2.map    1740   1742
+trampoline3.map     937   5477
+beard1.map          843    860
+beard2.map         2929   4522
+beard3.map          932   1789
+beard4.map         1750   3103
+beard5.map          660    946
+horock1.map         731    762
+horock2.map         230    747
+horock3.map        1521   2406
 

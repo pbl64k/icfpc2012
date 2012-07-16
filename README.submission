@@ -1,0 +1,16 @@
+
+Pavel "pbl64k" Lepin <plepin, separator, put association for computing machinery's domain name here>
+
+AS
+
+Team "This can't possibly be the end of the wo-"
+
+"At first I was liek, Oh noes! it's Sokoban!,
+ but then I was liek, Oh noes! it's Boulder Dash!"
+
+WARNING: KEEP AWAY FROM LOCAL MAXIMA.
+
+Sorry about being unable to set up the standard VM, had to test on my usual
+dev box. Since this doesn't require anything but g++ and a little bit of
+POSIXy stuff, it should compile on squeeze just fine.
+
