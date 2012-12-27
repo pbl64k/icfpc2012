@@ -1,6 +1,61 @@
 Soloed as team "This can't possibly be the end of the wo-"
 
-Ranked 25th out of 219 teams after round one, scored 9490 points.
+Ranked 55th out of 219 teams after the final round, with 15683 points (best
+being 294024).
+
+Round 1: Ranked 25th, with 9490 points (best being 10956).
+Round 2: Ranked 44th, with 15096 points (best being 21609).
+
+My lightning round submission pretty much bombed, as it only managed to solve
+the very first map, and even then suboptimally, scoring a whopping 210 points
+and placing 82th, just above the last person to finish with a positive score
+(there were a few others who finished in the negative). At least mine was
+smart enough to avoid killing itself. This result is rather unsurprising, as
+the only thing I had working at that point was the game engine, and the policy
+wasn't far removed from a random walk.
+
+Overall, I'm quite satisfied with my performance. I played solo this year, and
+I only spent around 24 hours on the problem over the three days (the
+theoretical maximum is 72 hours, but practically speaking it's possible to
+put around 50 to 60 hours into it without driving oneself into slackjawed
+exhaustion). So my goals were quite modest: implement all the game rules
+correctly, abort sensibly (instead of dying), pass to round 2. I achieved all
+of that and even passed to the final round, which was unexpected.
+
+My implementation is quite brain-dead. It's a local search largely unaware of
+global situation (except for some trivial heuristics). I dismissed
+straightforward A* almost immediately, as it blows in dynamic environments,
+and moving stones lead to rather drastic combinatorial explosion if approached
+naively, so I put pathfinding on my 'to-do-if-I-have-time-for-it-which-I-won't'
+list and concentrated on brute force local search.
+
+The algorithm does not discount future gains (as I put 3/2 instead of 2/3 as a
+discounting factor, got rather shocking results, and never figured out the bug
+during the contest), and so it's as happy to hang around lambdas as to
+actually eat them. Curiously, this turned out to be quite advantageous, as it
+added a dash of non-determinism to the algo which apparently helped it solve
+some maps it couldn't with proper discounting.
+
+Naturally, the algo tends to get stuck in local maxima. As a way around that I
+implemented a 'pheromonal bomb' which allows the robot to leave a temporary
+'stinky patch' wherever it hangs around for a long time. This isn't as good an
+idea as it might sound, as the robot usually starts oscillating between two
+nearby local maxima as a result. Furthermore, the implementation is buggy, as
+it happens. I meant the bomb to be a purely local effect, but it actually
+affects the entire field.
+
+Nonetheless, the resulting artificial moron performed surprisingly well on
+small maps, and using repeated searches it could often find quite decent
+solutions. I got a bit lucky in the first round in that my algo performed
+better on a few maps than it would on an average 120 seconds run (the algo
+being non-deterministic). This got compensated in round two, where it actually
+performed worse than on an average run.
+
+The algo completely bombed in the final round. I never got around to
+optimizing my game engine, so the simulation performance totally sucks on
+large maps. I still scored a few points, but only a tiny fraction of what
+would be possible with a more efficient engine (even using the same brain-dead
+algo).
 
                    MINE   BEST
 
@@ -11,6 +66,19 @@ main2.map          1559   1589
 main3.map          1649   2832
 main4.map          2104   2171
 main5.map          3029   4815
+
+Round 2:
+
+main6.map          1511   3299
+main7.map           650    666
+main8.map          2105   2601
+main9.map           971   3771
+main10.map          369   5749
+
+Final round:
+
+main11.map          539  61675
+main12.map           48 203979
 
 Stock maps:
 
@@ -40,3 +108,4 @@ beard5.map          660    946
 horock1.map         731    762
 horock2.map         230    747
 horock3.map        1521   2406
+
